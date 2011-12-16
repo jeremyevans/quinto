@@ -79,13 +79,20 @@ class GameState
   pass: => new GameState(@, {})
 
   checkValidMoves: (b, ts) =>
-    row = null
-    col = null
-    i = 0
+    mx = GameState.boardX
+    my = GameState.boardY
+    for [n, x, y] in ts
+      if x >= mx or y >= my or x < 0 or y < 0
+        throw("attempt to place tile outside of board: pos: #{x},#{y}")
+
     ts = if @empty
       @reorderTiles(b, [ts[0]], ts[1..ts.length-1])
     else
       @reorderTiles(b, [], ts[0..ts.length-1])
+
+    row = null
+    col = null
+    i = 0
     for [n, x, y] in ts
       switch i
         when 0
@@ -105,7 +112,7 @@ class GameState
           else if row != x
             throw("attempt to place tile not in same row: row: #{row}, pos: #{x},#{y}")
       unless @empty && i == 0
-        unless b[y][x-1] or b[y-1][x] or b[y][x+1] or b[y+1][x]
+        unless b[y][x-1] or (y > 0 and b[y-1][x]) or b[y][x+1] or (y < my - 1 and b[y+1][x])
           throw("attempt to place tile not adjacent to existing tile: pos: #{x},#{y}")
       if b[y][x]
         throw("attempt to place tile over existing tile: pos: #{x},#{y} tile: #{n}, existing: #{b[y][x]}")
@@ -120,7 +127,7 @@ class GameState
     nadj_ts = []
     change = false
     for [n, x, y] in ts
-      if b[y][x-1] or b[y-1][x] or b[y][x+1] or b[y+1][x]
+      if b[y][x-1] or (y > 0 and b[y-1][x]) or b[y][x+1] or (y < GameState.boardY - 1 and b[y+1][x])
         change = true
         adj_ts.unshift([n, x, y])
       else
@@ -222,11 +229,11 @@ class GameState
         @print("#{t} ")
       @print(@game.players[i].email)
 
-    @print("\n\nBoard\n    |")
+    @print("\n\nBoard\ny\\x |")
     for i in [0...GameState.boardX]
       @print(" #{if i < 10 then " " else ""}#{i} |")
-    for xs, j in @board
-      @print("\n #{if j < 10 then " " else ""}#{j} |")
+    for xs, y in @board
+      @print("\n #{if y < 10 then " " else ""}#{y} |")
       for i in xs
         @print(" #{if i < 10 then " " else ""}#{i or " "} |")
     @print("\n")
