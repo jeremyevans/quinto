@@ -62,11 +62,12 @@ class GameState
     t
 
   # Make a move on the board, returning the new GameState
-  move: (ts) =>
+  move: (moves) =>
     b = (xs.slice() for xs in @board)
     racks = @racks.slice()
     racks[@toMove] = racks[@toMove].slice()
     rack = racks[@toMove]
+    ts = @translateMoves(moves)
     for [n, x, y] in ts
       @useRackTile(rack, n)
     @checkValidMoves(b, ts)
@@ -78,12 +79,28 @@ class GameState
   # Pass making a move on the board, returning the new GameState
   pass: => new GameState(@, {})
 
+  translateMoves: (moves) ->
+    d = /\d/
+    for m in moves.split(' ')
+      x = if d.test(m[1]) then 2 else 1
+      [
+        parseInt(m[0...x], 10)
+        m.charCodeAt(x) - 97
+        parseInt(m[(x+1)..m.length], 10)
+      ]
+
+  translatePos: (x, y) ->
+    "#{@translateCol(x)}#{y}"
+
+  translateCol: (x) ->
+    String.fromCharCode(x+97)
+
   checkValidMoves: (b, ts) =>
     mx = GameState.boardX
     my = GameState.boardY
     for [n, x, y] in ts
       if x >= mx or y >= my or x < 0 or y < 0
-        throw("attempt to place tile outside of board: pos: #{x},#{y}")
+        throw("attempt to place tile outside of board: pos: #{@translatePos(x, y)}")
 
     ts = if @empty
       @reorderTiles(b, [ts[0]], ts[1..ts.length-1])
@@ -104,23 +121,23 @@ class GameState
           else if col == y
             row = null
           else
-            throw("attempt to place tile not in same row or column: row: #{row}, col: #{col}, pos: #{x},#{y}")
+            throw("attempt to place tile not in same row or column: row: #{row}, col: #{@translateCol(col)}, pos: #{@translatePos(x, y)}")
         else
           if row == null
             if col != y
-              throw("attempt to place tile not in same column: col: #{col}, pos: #{x},#{y}")
+              throw("attempt to place tile not in same column: col: #{@translateCol(col)}, pos: #{@translatePos(x, y)}")
           else if row != x
-            throw("attempt to place tile not in same row: row: #{row}, pos: #{x},#{y}")
+            throw("attempt to place tile not in same row: row: #{row}, pos: #{@translatePos(x, y)}")
       unless @empty && i == 0
         unless b[y][x-1] or (y > 0 and b[y-1][x]) or b[y][x+1] or (y < my - 1 and b[y+1][x])
-          throw("attempt to place tile not adjacent to existing tile: pos: #{x},#{y}")
+          throw("attempt to place tile not adjacent to existing tile: pos: #{@translatePos(x, y)}")
       if b[y][x]
-        throw("attempt to place tile over existing tile: pos: #{x},#{y} tile: #{n}, existing: #{b[y][x]}")
+        throw("attempt to place tile over existing tile: pos: #{@translatePos(x, y)} tile: #{n}, existing: #{b[y][x]}")
       else
         b[y][x] = n
       i += 1
     if @empty and !b[8][8]
-        throw("opening move must have tile placed in center square")
+        throw("opening move must have tile placed in center square (i8)")
 
   reorderTiles: (b, adj_ts, ts) ->
     return adj_ts if ts.length == 0
@@ -154,45 +171,46 @@ class GameState
     mx = GameState.boardX
     my = GameState.boardY
 
-    x = 0
-    while x < mx
-      y = 0
-      while y < my
-        s = b[x][y]
-        if s
-          l = 1
-          for i in [1..ml]
-            si = b[x][y+i]
-            break unless si
-            s += si
-            l++
-          if l > ml
-            throw("more than #{ml} consecutive tiles in row #{x} columns #{y}-#{y+l-1}")
-          if l > 1 and s % ms != 0
-            throw("consecutive tiles do not sum to multiple of #{ms} in row #{x} columns #{y}-#{y+l-1} sum #{s}")
-          y += l
-        y++
-      x++
-
     y = 0
     while y < my
       x = 0
       while x < mx
-        s = b[x][y]
+        s = b[y][x]
         if s
           l = 1
           for i in [1..ml]
-            si = b[x+i][y]
+            si = b[y][x+i]
             break unless si
             s += si
             l++
           if l > ml
-            throw("more than #{ml} consecutive tiles in column #{y} rows #{x}-#{x+l-1}")
+            throw("more than #{ml} consecutive tiles in row #{y} columns #{@translateCol(x)}-#{@translateCol(x+l-1)}")
           if l > 1 and s % ms != 0
-            throw("consecutive tiles do not sum to multiple of #{ms} in column #{y} rows #{x}-#{x+l-1} sum #{s}")
+            throw("consecutive tiles do not sum to multiple of #{ms} in row #{y} columns #{@translateCol(x)}-#{@translateCol(x+l-1)} sum #{s}")
           x += l
         x++
       y++
+
+    x = 0
+    while x < mx
+      y = 0
+      while y < my
+        s = b[y][x]
+        if s
+          l = 1
+          for i in [1..ml]
+            si = if b[y+1] then b[y+i][x] else null
+            break unless si
+            s += si
+            l++
+          if l > ml
+            throw("more than #{ml} consecutive tiles in column #{@translateCol(x)} rows #{y}-#{y+l-1}")
+          if l > 1 and s % ms != 0
+            throw("consecutive tiles do not sum to multiple of #{ms} in row #{@translateCol(x)} columns #{y}-#{y+l-1} sum #{s}")
+          y += l
+        y++
+      x++
+
 
   # Pick a numbered tile from the given rack, removing it from the rack.
   # Throw an error if the tile is not in the rack.
@@ -229,20 +247,29 @@ class GameState
         @print("#{t} ")
       @print(@game.players[i].email)
 
-    @print("\n\nBoard\ny\\x |")
-    for i in [0...GameState.boardX]
-      @print(" #{if i < 10 then " " else ""}#{i} |")
-    for xs, y in @board
-      @print("\n #{if y < 10 then " " else ""}#{y} |")
+    mx = GameState.boardX
+    my = GameState.boardY
+    @print("\n\nBoard\n  -")
+    for i in [0...mx]
+      @print("---")
+    for xs, y in @board.slice().reverse()
+      y2 = my-y-1
+      @print("\n#{if y2 < 10 then " " else ""}#{y2}|")
       for i in xs
-        @print(" #{if i < 10 then " " else ""}#{i or " "} |")
+        @print("#{if i < 10 then " " else ""}#{i or " "}|")
+    @print("\n  |")
+    for i in [0...mx]
+      @print("--+")
+    @print("\n  |")
+    for i in [0...mx]
+      @print(" #{String.fromCharCode(97+i)}|")
     @print("\n")
 
 class Game
   constructor: (@players) -> @state = GameState.empty(@)
 
-  move: (tiles) =>
-    @state = @state.move(tiles)
+  move: (moves) =>
+    @state = @state.move(moves)
     @state.show()
 
   pass: =>
