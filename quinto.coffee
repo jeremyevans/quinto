@@ -74,6 +74,10 @@ class GameState
     row = null
     col = null
     i = 0
+    ts = if @empty
+      @reorderTiles(b, [ts[0]], ts[1..ts.length-1])
+    else
+      @reorderTiles(b, [], ts[0..ts.length-1])
     for [n, x, y] in ts
       switch i
         when 0
@@ -102,6 +106,32 @@ class GameState
       i += 1
     if @empty and b[8][8] == null
         throw("opening move must have tile placed in center square")
+
+  reorderTiles: (b, adj_ts, ts) ->
+    return adj_ts if ts.length == 0
+    nadj_ts = []
+    change = false
+    for [n, x, y] in ts
+      unless b[y][x-1] == null and b[y-1][x] == null and b[y][x+1] == null and b[y+1][x] == null
+        change = true
+        adj_ts.unshift([n, x, y])
+      else
+        adj = false
+        for [n1, x1, y1] in adj_ts
+          if y == y1
+            if x == x1 - 1 or x == x1 + 1
+              adj = true
+          else if x == x1 and (y == y1 - 1 or y == y1 + 1)
+              adj = true
+        if adj
+          adj_ts.push([n, x, y])
+        else
+          nadj_ts.push([n, x, y])
+        change = adj if adj
+    if change
+      @reorderTiles(b, adj_ts, nadj_ts)
+    else
+      adj_ts.concat(ts)
 
   # Pick a numbered tile from the given rack, removing it from the rack.
   # Throw an error if the tile is not in the rack.
