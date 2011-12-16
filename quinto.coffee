@@ -27,7 +27,7 @@ class GameState
   # Create an empty Quinto game
   @empty: (game) =>
     racks = ([] for p in game.players)
-    new @(null, {game: game, tiles: @tiles, board: @emptyBoard, toMove: -1, racks: racks})
+    new @(null, {game: game, tiles: @tiles, board: @emptyBoard, empty: true, toMove: -1, racks: racks})
 
   # Create a new GameState based on the previous GameState with the given changes
   constructor: (@previous, changes) ->
@@ -62,11 +62,48 @@ class GameState
     rack = racks[@toMove]
     for [n, x, y] in ts
       @useRackTile(rack, n)
-      b[y][x] = n
-    new GameState(@, {board: b, racks: racks})
+    @checkValidMoves(b, ts)
+    changes = {board: b, racks: racks}
+    changes.empty = false if @empty
+    new GameState(@, changes)
 
   # Pass making a move on the board, returning the new GameState
   pass: => new GameState(@, {})
+
+  checkValidMoves: (b, ts) =>
+    row = null
+    col = null
+    i = 0
+    if @empty
+      center = false
+      for [n, x, y] in ts
+        if x == 8 and y == 8
+          center = true
+      unless center
+        throw("opening move must have tile placed in center square")
+    for [n, x, y] in ts
+      switch i
+        when 0
+          row = x
+          col = y
+        when 1
+          if row == x
+            col = null
+          else if col == y
+            row = null
+          else
+            throw("attempt to place tile not in same row or column: row: #{row}, col: #{col}, pos: #{x},#{y}")
+        else
+          if row == null
+            if col != y
+              throw("attempt to place tile not in same column: col: #{col}, pos: #{x},#{y}")
+          else if row != x
+            throw("attempt to place tile not in same row: row: #{row}, pos: #{x},#{y}")
+      if b[y][x] != null
+        throw("attempt to place tile over existing tile: pos: #{x},#{y} tile: #{n}, existing: #{b[y][x]}")
+      else
+        b[y][x] = n
+      i += 1
 
   # Pick a numbered tile from the given rack, removing it from the rack.
   # Throw an error if the tile is not in the rack.
@@ -114,8 +151,14 @@ class GameState
 
 class Game
   constructor: (@players) -> @state = GameState.empty(@)
-  move: (tiles) => @state = @state.move(tiles)
-  pass: => @state = @state.pass()
+
+  move: (tiles) =>
+    @state = @state.move(tiles)
+    @state.show()
+
+  pass: =>
+    @state = @state.pass()
+    @state.show()
 
 global.Player = Player
 global.Game = Game
