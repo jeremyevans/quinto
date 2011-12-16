@@ -74,13 +74,6 @@ class GameState
     row = null
     col = null
     i = 0
-    if @empty
-      center = false
-      for [n, x, y] in ts
-        if x == 8 and y == 8
-          center = true
-      unless center
-        throw("opening move must have tile placed in center square")
     for [n, x, y] in ts
       switch i
         when 0
@@ -107,6 +100,8 @@ class GameState
       else
         b[y][x] = n
       i += 1
+    if @empty and b[8][8] == null
+        throw("opening move must have tile placed in center square")
 
   # Pick a numbered tile from the given rack, removing it from the rack.
   # Throw an error if the tile is not in the rack.
