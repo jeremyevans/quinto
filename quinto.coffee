@@ -99,6 +99,9 @@ class GameState
               throw("attempt to place tile not in same column: col: #{col}, pos: #{x},#{y}")
           else if row != x
             throw("attempt to place tile not in same row: row: #{row}, pos: #{x},#{y}")
+      unless @empty && i == 0
+        if b[y][x-1] == null and b[y-1][x] == null and b[y][x+1] == null and b[y+1][x] == null
+          throw("attempt to place tile not adjacent to existing tile: pos: #{x},#{y}")
       if b[y][x] != null
         throw("attempt to place tile over existing tile: pos: #{x},#{y} tile: #{n}, existing: #{b[y][x]}")
       else
