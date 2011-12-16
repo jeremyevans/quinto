@@ -5,6 +5,13 @@ class GameState
   # Number of tiles each player has at one time
   @rackSize: 5
 
+  # Maximum number of tiles in a row
+  @maxLength = 5
+
+  # What the sum of all consecutive tiles in a row or column must equal
+  # a multiple of
+  @sumEqual = 5
+
   # Dimensions of board
   @boardX: 17
   @boardY: 17
@@ -63,6 +70,7 @@ class GameState
     for [n, x, y] in ts
       @useRackTile(rack, n)
     @checkValidMoves(b, ts)
+    @checkBoard(b)
     changes = {board: b, racks: racks}
     changes.empty = false if @empty
     new GameState(@, changes)
@@ -97,14 +105,14 @@ class GameState
           else if row != x
             throw("attempt to place tile not in same row: row: #{row}, pos: #{x},#{y}")
       unless @empty && i == 0
-        if b[y][x-1] == null and b[y-1][x] == null and b[y][x+1] == null and b[y+1][x] == null
+        unless b[y][x-1] or b[y-1][x] or b[y][x+1] or b[y+1][x]
           throw("attempt to place tile not adjacent to existing tile: pos: #{x},#{y}")
-      if b[y][x] != null
+      if b[y][x]
         throw("attempt to place tile over existing tile: pos: #{x},#{y} tile: #{n}, existing: #{b[y][x]}")
       else
         b[y][x] = n
       i += 1
-    if @empty and b[8][8] == null
+    if @empty and !b[8][8]
         throw("opening move must have tile placed in center square")
 
   reorderTiles: (b, adj_ts, ts) ->
@@ -112,7 +120,7 @@ class GameState
     nadj_ts = []
     change = false
     for [n, x, y] in ts
-      unless b[y][x-1] == null and b[y-1][x] == null and b[y][x+1] == null and b[y+1][x] == null
+      if b[y][x-1] or b[y-1][x] or b[y][x+1] or b[y+1][x]
         change = true
         adj_ts.unshift([n, x, y])
       else
@@ -132,6 +140,52 @@ class GameState
       @reorderTiles(b, adj_ts, nadj_ts)
     else
       adj_ts.concat(ts)
+
+  checkBoard: (b) ->
+    ms = GameState.sumEqual
+    ml = GameState.maxLength
+    mx = GameState.boardX
+    my = GameState.boardY
+
+    x = 0
+    while x < mx
+      y = 0
+      while y < my
+        s = b[x][y]
+        if s
+          l = 1
+          for i in [1..ml]
+            si = b[x][y+i]
+            break unless si
+            s += si
+            l++
+          if l > ml
+            throw("more than #{ml} consecutive tiles in row #{x} columns #{y}-#{y+l-1}")
+          if l > 1 and s % ms != 0
+            throw("consecutive tiles do not sum to multiple of #{ms} in row #{x} columns #{y}-#{y+l-1} sum #{s}")
+          y += l
+        y++
+      x++
+
+    y = 0
+    while y < my
+      x = 0
+      while x < mx
+        s = b[x][y]
+        if s
+          l = 1
+          for i in [1..ml]
+            si = b[x+i][y]
+            break unless si
+            s += si
+            l++
+          if l > ml
+            throw("more than #{ml} consecutive tiles in column #{y} rows #{x}-#{x+l-1}")
+          if l > 1 and s % ms != 0
+            throw("consecutive tiles do not sum to multiple of #{ms} in column #{y} rows #{x}-#{x+l-1} sum #{s}")
+          x += l
+        x++
+      y++
 
   # Pick a numbered tile from the given rack, removing it from the rack.
   # Throw an error if the tile is not in the rack.
