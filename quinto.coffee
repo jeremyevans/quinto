@@ -56,10 +56,13 @@ class GameState
 
   # Remove i number of tiles from the tile bag
   takeTiles: (i) =>
-    t = []
-    for j in [0...i]
-      t.push(@tiles.splice(Math.floor(Math.random() * @tiles.length), 1)[0])
-    t
+    if i >= @tiles.length
+      @tiles.splice(0, @tiles.length)
+    else
+      t = []
+      for j in [0...i]
+        t.push(@tiles.splice(Math.floor(Math.random() * @tiles.length), 1)[0])
+      t
 
   # Make a move on the board, returning the new GameState
   move: (moves) =>
