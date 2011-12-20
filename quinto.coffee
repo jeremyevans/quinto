@@ -34,7 +34,7 @@ class GameState
   # Create an empty Quinto game
   @empty: (game) =>
     racks = ([] for p in game.players)
-    new @(null, {game: game, tiles: @tiles, board: @emptyBoard, empty: true, toMove: -1, racks: racks})
+    new @(null, {game: game, tiles: @tiles.slice().sort(-> 0.5 - Math.random()), board: @emptyBoard, empty: true, toMove: -1, racks: racks})
 
   # Create a new GameState based on the previous GameState with the given changes
   constructor: (@previous, changes) ->
@@ -56,13 +56,7 @@ class GameState
 
   # Remove i number of tiles from the tile bag
   takeTiles: (i) =>
-    if i >= @tiles.length
-      @tiles.splice(0, @tiles.length)
-    else
-      t = []
-      for j in [0...i]
-        t.push(@tiles.splice(Math.floor(Math.random() * @tiles.length), 1)[0])
-      t
+    @tiles.splice(0, if i >= @tiles.length then @tiles.length else i)
 
   # Make a move on the board, returning the new GameState
   move: (moves) =>
