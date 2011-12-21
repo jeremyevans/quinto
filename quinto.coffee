@@ -78,36 +78,39 @@ class GameState
       @useRackTile(rack, n)
     @checkValidMoves(b, ts)
     @checkBoard(b)
+    runs = @getRuns(b, ts)
     scores = @scores.slice()
-    scores[@toMove] += @calculateScore(b, ts)
-    changes = {board: b, racks: racks, scores: scores, lastMove: moves}
+    scores[@toMove] += @sum(v for k, v of runs)
+    changes = {board: b, racks: racks, scores: scores, lastMove: moves, lastRuns: runs}
     changes.empty = false if @empty
     new GameState(@, changes)
 
   # Pass making a move on the board, returning the new GameState
-  pass: => new GameState(@, {lastMove: null})
+  pass: => new GameState(@, {lastMove: null, lastRuns: null})
 
-  calculateScore: (b, ts) ->
-    return @sum(n for [n, x, y] in ts) if @empty
+  getRuns: (b, ts) ->
     scores = {}
-    for [n, x, y] in ts
-      @xRun(scores, b, y, x) if b[y][x+1] or b[y][x-1]
-      @yRun(scores, b, y, x) if (y > 0 and b[y-1][x]) or (y < GameState.boardY - 1 and b[y+1][x])
-    @sum(v for k, v of scores)
+    if @empty && ts.length == 1
+      scores[@translatePos(ts[0][1], ts[0][2])] = ts[0][0]
+    else
+      for [n, x, y] in ts
+        @xRun(scores, b, y, x) if b[y][x+1] or b[y][x-1]
+        @yRun(scores, b, y, x) if (y > 0 and b[y-1][x]) or (y < GameState.boardY - 1 and b[y+1][x])
+    scores
 
   xRun: (scores, b, y, x) ->
     xMin = x
     xMax = x
     xMin-- while b[y][xMin-1]
     xMax++ while b[y][xMax+1]
-    scores["x#{y}x#{xMin}-#{xMax}"] ?= @sum(b[y][i] for i in [xMin..xMax])
+    scores["#{y}#{@translateCol(xMin)}-#{@translateCol(xMax)}"] ?= @sum(b[y][i] for i in [xMin..xMax])
 
   yRun: (scores, b, y, x) ->
     yMin = y
     yMax = y
     yMin-- while b[yMin-1] and b[yMin-1][x]
     yMax++ while b[yMax+1] and b[yMax+1][x]
-    scores["y#{x}x#{yMin}-#{yMax}"] ?= @sum(b[i][x] for i in [yMin..yMax])
+    scores["#{@translateCol(x)}#{yMin}-#{yMax}"] ?= @sum(b[i][x] for i in [yMin..yMax])
 
   sum: (a) ->
     score = 0
@@ -275,6 +278,15 @@ class GameState
   # Print the remaining tiles, racks, and board to stdout for debugging
   show: =>
     tc = @tileCounts()
+
+    if @lastMove
+      @print("Last Move: #{@lastMove}\n")
+      for k, v of @lastRuns
+        @print("  #{k}: #{v}\n")
+      @print("\n")
+    else if @lastMove == null
+      @print("Last Move: Pass\n\n")
+
     @print("Scores:\n")
     for s, i in @scores
       @print("#{@game.players[i].email}: #{s}\n")
