@@ -33,6 +33,8 @@ class GameState
 
   # Create an empty Quinto game
   @empty: (game) =>
+    if game.players.length == 0
+      throw("must have at least 1 player")
     racks = ([] for p in game.players)
     scores = (0 for p in game.players)
     new @(null, {
@@ -42,7 +44,11 @@ class GameState
       empty: true,
       toMove: -1,
       racks: racks,
-      scores:scores
+      scores:scores,
+      lastMove: null,
+      lastRuns: null,
+      passCount: 0,
+      gameOver: false
     })
 
   # Create a new GameState based on the previous GameState with the given changes
@@ -60,9 +66,12 @@ class GameState
     @tiles = @tiles.slice()
     @racks = (@fillRack(rack).sort(@rackSort) for rack in @racks)
 
-    for x in @racks
-      if x.length == 0
-        @gameOver = true
+    if @passCount == @racks.length
+      @gameOver = true
+    else
+      for x in @racks
+        if x.length == 0
+          @gameOver = true
 
     @winners = @determineWinners() if @gameOver
 
@@ -91,12 +100,12 @@ class GameState
     runs = @getRuns(b, ts)
     scores = @scores.slice()
     scores[@toMove] += @sum(v for k, v of runs)
-    changes = {board: b, racks: racks, scores: scores, lastMove: moves, lastRuns: runs}
+    changes = {board: b, racks: racks, scores: scores, lastMove: moves, lastRuns: runs, passCount: 0}
     changes.empty = false if @empty
     new GameState(@, changes)
 
   # Pass making a move on the board, returning the new GameState
-  pass: => new GameState(@, {lastMove: null, lastRuns: null})
+  pass: => new GameState(@, {lastMove: null, lastRuns: null, passCount: @passCount+1})
 
   determineWinners: =>
     max = 0
