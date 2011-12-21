@@ -172,8 +172,11 @@ class GameState
       else
         b[y][x] = n
       i += 1
-    if @empty and !b[8][8]
+    if @empty
+      unless b[8][8]
         throw("opening move must have tile placed in center square (i8)")
+      unless @sum(n for [n, x, y] in ts) % GameState.sumEqual == 0 
+        throw("opening move must sum to multiple of #{GameState.sumEqual}")
 
   reorderTiles: (b, adj_ts, ts) ->
     return adj_ts if ts.length == 0
