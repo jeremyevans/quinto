@@ -80,12 +80,12 @@ class GameState
     @checkBoard(b)
     scores = @scores.slice()
     scores[@toMove] += @calculateScore(b, ts)
-    changes = {board: b, racks: racks, scores: scores}
+    changes = {board: b, racks: racks, scores: scores, lastMove: moves}
     changes.empty = false if @empty
     new GameState(@, changes)
 
   # Pass making a move on the board, returning the new GameState
-  pass: => new GameState(@, {})
+  pass: => new GameState(@, {lastMove: null})
 
   calculateScore: (b, ts) ->
     return @sum(n for [n, x, y] in ts) if @empty
