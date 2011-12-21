@@ -52,9 +52,19 @@ class GameState
     for own k, v of previous
       unless v instanceof Function
         @[k] ?= v
+
+    if @gameOver
+      throw("Game already ended, can't make more moves")
+
     @toMove = (@toMove + 1) % @racks.length
     @tiles = @tiles.slice()
     @racks = (@fillRack(rack).sort(@rackSort) for rack in @racks)
+
+    for x in @racks
+      if x.length == 0
+        @gameOver = true
+
+    @winners = @determineWinners() if @gameOver
 
   # Sort function for rack tiles
   rackSort: (a, b) -> parseInt(a, 10) - parseInt(b, 10)
@@ -87,6 +97,12 @@ class GameState
 
   # Pass making a move on the board, returning the new GameState
   pass: => new GameState(@, {lastMove: null, lastRuns: null})
+
+  determineWinners: =>
+    max = 0
+    for s in @scores
+      max = s if s > max
+    @game.players[i] for s, i in @scores when s == max
 
   getRuns: (b, ts) ->
     scores = {}
@@ -291,11 +307,14 @@ class GameState
     for s, i in @scores
       @print("#{@game.players[i].email}: #{s}\n")
 
-    @print("\nCurrent Player: #{@game.players[@toMove].email}")
+    if @gameOver
+      @print("\nWinners: #{(p.email for p in @winners).join(', ')}")
+    else
+      @print("\nCurrent Player: #{@game.players[@toMove].email}")
 
-    @print("\n\nCurrent Rack: ")
-    for t in @racks[@toMove]
-      @print("#{t} ")
+      @print("\n\nCurrent Rack: ")
+      for t in @racks[@toMove]
+        @print("#{t} ")
 
     mx = GameState.boardX
     my = GameState.boardY
