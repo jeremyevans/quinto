@@ -34,7 +34,16 @@ class GameState
   # Create an empty Quinto game
   @empty: (game) =>
     racks = ([] for p in game.players)
-    new @(null, {game: game, tiles: @tiles.slice().sort(-> 0.5 - Math.random()), board: @emptyBoard, empty: true, toMove: -1, racks: racks})
+    scores = (0 for p in game.players)
+    new @(null, {
+      game: game,
+      tiles: @tiles.slice().sort(-> 0.5 - Math.random()),
+      board: @emptyBoard,
+      empty: true,
+      toMove: -1,
+      racks: racks,
+      scores:scores
+    })
 
   # Create a new GameState based on the previous GameState with the given changes
   constructor: (@previous, changes) ->
@@ -69,12 +78,42 @@ class GameState
       @useRackTile(rack, n)
     @checkValidMoves(b, ts)
     @checkBoard(b)
-    changes = {board: b, racks: racks}
+    scores = @scores.slice()
+    scores[@toMove] += @calculateScore(b, ts)
+    changes = {board: b, racks: racks, scores: scores}
     changes.empty = false if @empty
     new GameState(@, changes)
 
   # Pass making a move on the board, returning the new GameState
   pass: => new GameState(@, {})
+
+  calculateScore: (b, ts) ->
+    return @sum(n for [n, x, y] in ts) if @empty
+    scores = {}
+    for [n, x, y] in ts
+      @xRun(scores, b, y, x) if b[y][x+1] or b[y][x-1]
+      @yRun(scores, b, y, x) if (y > 0 and b[y-1][x]) or (y < GameState.boardY - 1 and b[y+1][x])
+    @sum(v for k, v of scores)
+
+  xRun: (scores, b, y, x) ->
+    xMin = x
+    xMax = x
+    xMin-- while b[y][xMin-1]
+    xMax++ while b[y][xMax+1]
+    scores["x#{y}x#{xMin}-#{xMax}"] ?= @sum(b[y][i] for i in [xMin..xMax])
+
+  yRun: (scores, b, y, x) ->
+    yMin = y
+    yMax = y
+    yMin-- while b[yMin-1] and b[yMin-1][x]
+    yMax++ while b[yMax+1] and b[yMax+1][x]
+    scores["y#{x}x#{yMin}-#{yMax}"] ?= @sum(b[i][x] for i in [yMin..yMax])
+
+  sum: (a) ->
+    score = 0
+    for x in a
+      score += x
+    score
 
   translateMoves: (moves) ->
     d = /\d/
@@ -233,16 +272,15 @@ class GameState
   # Print the remaining tiles, racks, and board to stdout for debugging
   show: =>
     tc = @tileCounts()
-    @print("Tiles\n")
-    for i in [1..10]
-      @print("#{i}: #{tc[i]}, ")
+    @print("Scores:\n")
+    for s, i in @scores
+      @print("#{@game.players[i].email}: #{s}\n")
 
-    @print("\n\nRacks")
-    for r, i in @racks
-      @print("\n#{if i == @toMove then "*" else " "}#{i+1}: ")
-      for t in r
-        @print("#{t} ")
-      @print(@game.players[i].email)
+    @print("\nCurrent Player: #{@game.players[@toMove].email}")
+
+    @print("\n\nCurrent Rack: ")
+    for t in @racks[@toMove]
+      @print("#{t} ")
 
     mx = GameState.boardX
     my = GameState.boardY
@@ -275,5 +313,7 @@ class Game
 
 global.Player = Player
 global.Game = Game
+global.GameState = GameState
 global.g = (new Game [new Player('player1@foo.com'), new Player('player2@bar.com')])
+global.m = g.move
 g.state.show()
