@@ -354,9 +354,7 @@ class Game
     @state = @state.pass()
     @state.show()
 
-global.Player = Player
-global.Game = Game
-global.GameState = GameState
-global.g = (new Game [new Player('player1@foo.com'), new Player('player2@bar.com')])
-global.m = g.move
-g.state.show()
+m = exports or global or window
+m.Player = Player
+m.Game = Game
+m.GameState = GameState

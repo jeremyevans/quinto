@@ -1,0 +1,9 @@
+h1, h2 {text-align: center; }
+
+#board table {background-color: gray; margin: auto;}
+#board table, #board tr, #board td { border: solid #555 2px; }
+#board td {width: 30px; height: 30px; text-align: center; font-size: 18px; font-weight: bold; }
+
+#rack table {margin: auto; margin-top: 30px;}
+#rack td { border: solid black 2px; }
+#rack td {width: 50px; height: 50px; text-align: center; font-size: 48px; font-weight: bold; }
