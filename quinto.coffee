@@ -41,13 +41,12 @@ class GameState
       game: game,
       tiles: @tiles.slice().sort(-> 0.5 - Math.random()),
       board: @emptyBoard,
-      empty: true,
-      toMove: -1,
       racks: racks,
       scores:scores,
       lastMove: null,
       lastRuns: null,
       passCount: 0,
+      moveCount: -1,
       gameOver: false
     })
 
@@ -62,7 +61,8 @@ class GameState
     if @gameOver
       throw("Game already ended, can't make more moves")
 
-    @toMove = (@toMove + 1) % @racks.length
+    @moveCount = @moveCount + 1
+    @toMove = @moveCount % @racks.length
     @tiles = @tiles.slice()
     @racks = (@fillRack(rack).sort(@rackSort) for rack in @racks)
 
@@ -88,24 +88,37 @@ class GameState
 
   # Make a move on the board, returning the new GameState
   move: (moves) =>
-    b = (xs.slice() for xs in @board)
+    changes = @checkMove(moves, @board, @racks[@toMove])
+
+    scores = @scores.slice()
+    scores[@toMove] += changes.score
+    changes.scores = scores
+    delete changes.score
+
     racks = @racks.slice()
-    racks[@toMove] = racks[@toMove].slice()
-    rack = racks[@toMove]
+    racks[@toMove] = changes.rack
+    changes.racks = racks
+    delete changes.rack
+
+    new GameState(@, changes)
+
+  checkMove: (moves, b, rack) =>
+    board = (xs.slice() for xs in @board)
+    rack = rack.slice()
     ts = @translateMoves(moves)
     for [n, x, y] in ts
       @useRackTile(rack, n)
-    @checkValidMoves(b, ts)
-    @checkBoard(b)
-    runs = @getRuns(b, ts)
-    scores = @scores.slice()
-    scores[@toMove] += @sum(v for k, v of runs)
-    changes = {board: b, racks: racks, scores: scores, lastMove: moves, lastRuns: runs, passCount: 0}
-    changes.empty = false if @empty
-    new GameState(@, changes)
+    @checkValidMoves(board, ts)
+    @checkBoard(board)
+    runs = @getRuns(board, ts)
+    score = @sum(v for k, v of runs)
+    changes = {board: board, rack: rack, score: score, lastMove: moves, lastRuns: runs, passCount: 0}
+    changes
 
   # Pass making a move on the board, returning the new GameState
   pass: => new GameState(@, {lastMove: null, lastRuns: null, passCount: @passCount+1})
+
+  empty: => @moveCount - @passCount == 0
 
   determineWinners: =>
     max = 0
@@ -115,7 +128,7 @@ class GameState
 
   getRuns: (b, ts) ->
     scores = {}
-    if @empty && ts.length == 1
+    if @empty() && ts.length == 1
       scores[@translatePos(ts[0][1], ts[0][2])] = ts[0][0]
     else
       for [n, x, y] in ts
@@ -153,11 +166,8 @@ class GameState
         parseInt(m[(x+1)..m.length], 10)
       ]
 
-  translatePos: (x, y) ->
-    "#{@translateCol(x)}#{y}"
-
-  translateCol: (x) ->
-    String.fromCharCode(x+97)
+  translatePos: (x, y) => "#{@translateCol(x)}#{y}"
+  translateCol: (x) -> String.fromCharCode(x+97)
 
   checkValidMoves: (b, ts) =>
     mx = GameState.boardX
@@ -166,7 +176,7 @@ class GameState
       if x >= mx or y >= my or x < 0 or y < 0
         throw("attempt to place tile outside of board: pos: #{@translatePos(x, y)}")
 
-    ts = if @empty
+    ts = if @empty()
       @reorderTiles(b, [ts[0]], ts[1..ts.length-1])
     else
       @reorderTiles(b, [], ts[0..ts.length-1])
@@ -192,7 +202,7 @@ class GameState
               throw("attempt to place tile not in same column: col: #{@translateCol(col)}, pos: #{@translatePos(x, y)}")
           else if row != x
             throw("attempt to place tile not in same row: row: #{row}, pos: #{@translatePos(x, y)}")
-      unless @empty && i == 0
+      unless @empty() && i == 0
         unless b[y][x-1] or (y > 0 and b[y-1][x]) or b[y][x+1] or (y < my - 1 and b[y+1][x])
           throw("attempt to place tile not adjacent to existing tile: pos: #{@translatePos(x, y)}")
       if b[y][x]
@@ -200,7 +210,7 @@ class GameState
       else
         b[y][x] = n
       i += 1
-    if @empty
+    if @empty()
       unless b[8][8]
         throw("opening move must have tile placed in center square (i8)")
       unless @sum(n for [n, x, y] in ts) % GameState.sumEqual == 0 
@@ -266,7 +276,7 @@ class GameState
         if s
           l = 1
           for i in [1..ml]
-            si = if b[y+1] then b[y+i][x] else null
+            si = if b[y+i] then b[y+i][x] else null
             break unless si
             s += si
             l++
@@ -278,7 +288,6 @@ class GameState
         y++
       x++
 
-
   # Pick a numbered tile from the given rack, removing it from the rack.
   # Throw an error if the tile is not in the rack.
   useRackTile: (rack, n) =>
@@ -288,73 +297,12 @@ class GameState
         return
     throw("attempt to use tile not in rack: tile: #{n}, rack: #{rack}")
 
-  # Return an array showing the number remaining of all tiles in the tile bag
-  tileCounts: =>
-    counts = {}
-    for t in [1..10]
-      counts[t] = 0
-    for t in @tiles
-      counts[t] += 1
-    counts
-
-  # Alias for easier use
-  print: (x) => process.stdout.write(x)
-
-  # Print the remaining tiles, racks, and board to stdout for debugging
-  show: =>
-    tc = @tileCounts()
-
-    if @lastMove
-      @print("Last Move: #{@lastMove}\n")
-      for k, v of @lastRuns
-        @print("  #{k}: #{v}\n")
-      @print("\n")
-    else if @lastMove == null
-      @print("Last Move: Pass\n\n")
-
-    @print("Scores:\n")
-    for s, i in @scores
-      @print("#{@game.players[i].email}: #{s}\n")
-
-    if @gameOver
-      @print("\nWinners: #{(p.email for p in @winners).join(', ')}")
-    else
-      @print("\nCurrent Player: #{@game.players[@toMove].email}")
-
-      @print("\n\nCurrent Rack: ")
-      for t in @racks[@toMove]
-        @print("#{t} ")
-
-    mx = GameState.boardX
-    my = GameState.boardY
-    @print("\n\nBoard\n  -")
-    for i in [0...mx]
-      @print("---")
-    for xs, y in @board.slice().reverse()
-      y2 = my-y-1
-      @print("\n#{if y2 < 10 then " " else ""}#{y2}|")
-      for i in xs
-        @print("#{if i < 10 then " " else ""}#{i or " "}|")
-    @print("\n  |")
-    for i in [0...mx]
-      @print("--+")
-    @print("\n  |")
-    for i in [0...mx]
-      @print(" #{String.fromCharCode(97+i)}|")
-    @print("\n")
-
 class Game
   constructor: (@players) -> @state = GameState.empty(@)
+  move: (moves) => @state = @state.move(moves)
+  pass: => @state = @state.pass()
 
-  move: (moves) =>
-    @state = @state.move(moves)
-    @state.show()
-
-  pass: =>
-    @state = @state.pass()
-    @state.show()
-
-m = exports or global or window
-m.Player = Player
-m.Game = Game
-m.GameState = GameState
+if exports?
+  exports.Player = Player
+  exports.Game = Game
+  exports.GameState = GameState
