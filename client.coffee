@@ -15,20 +15,30 @@ handleAction = (a) ->
   else
     alert("Unhandled action: #{a.action}")
 
-gameState = -> window.game.state
+gameState = -> window.game.state()
 
 actionHandler.poll = (a) ->
-  setTimeout((->
-    $.getJSON(a.poll, handleActions)
-  ), 10000)
+  setTimeout((-> request(a.poll)), 10000)
 
 actionHandler.updateInfo = (a) ->
   gs = gameState()
   for k, v of a.state
     gs[k] = v
+  board = gs.board
   tp = gs.translatePos
   $('#to_move').html(if gs.toMove == gs.playerId then 'Your Turn!' else "#{gs.players[gs.toMove]}'s Turn")
-  $('#board').html("<table>#{("<tr>#{("<td class='board_tile#{if i then ' fixed' else ''}' id='#{tp(x, y)}'>#{if i then i else ''}</td>" for i, x in xs).join('')}</tr>" for xs, y in gs.board).join('')}</table>")
+
+  board_html = "<table>"
+  for y in [0...GameState.boardY]
+    board_html += "<tr>"
+    for x in [0...GameState.boardX]
+      pos = tp(x, y)
+      value = board[pos]
+      board_html += "<td class='board_tile#{if value then ' fixed' else ''}' id='#{pos}'>#{if value then value else ''}</td>"
+    board_html += "</tr>"
+  board_html += "</table>"
+  $('#board').html(board_html)
+
   $('#rack').html("<h2>Your Tile Rack:</h2><table><tr>#{("<td class='rack_tile' id='rack#{i}'>#{x}</td>" for x, i in gs.rack).join('')}</tr></table>")
   $('#scores').html("<h2>Scores:<h2><table>#{("<tr><td>#{if i == gs.playerId then 'You' else p}:</td><td>#{gs.scores[i]}</td></tr>" for p, i in gs.players).join('')}</table>")
   $('#current_move').html('')

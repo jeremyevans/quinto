@@ -12,7 +12,7 @@ app.use express.cookieParser()
 app.use express.session({secret: fs.readFileSync('session.secret', 'ascii')})
 
 app.game = (new Q.Game [new Q.Player('player1@foo.com'), new Q.Player('player2@bar.com')])
-app.gameState = (req) -> app.game.state
+app.gameState = (req) -> app.game.state()
 
 app.get '/app.js', (req, res) ->
   res.send(app.client_js(), {'Content-Type': 'text/javascript'})
@@ -39,8 +39,8 @@ app.get '/game/check/:playerId/:moveCount', (req, res) ->
   gs = app.gameState(req)
   i = pI(req)
   mc = parseInt10(req.param('moveCount'))
-  if gs.moveCount == i
-    res.json({action: 'poll', poll: "/game/check/#{i}/#{mc}"})
+  if gs.moveCount == mc
+    res.json([{action: 'poll', poll: "/game/check/#{i}/#{mc}"}])
   else
     res.json([boardJson(gs, i)])
 
@@ -49,7 +49,7 @@ app.post '/game/move/:playerId', (req, res) ->
   i = pI(req)
   if i == gs.toMove
     gs.game.move(req.param('move'))
-    gs = gs.game.state
+    gs = gs.game.state()
     res.json([boardJson(gs, i)])
   else
     throw new Error('Not your turn')

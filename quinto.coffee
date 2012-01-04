@@ -16,6 +16,9 @@ class GameState
   @boardX: 17
   @boardY: 17
 
+  @centerX: (@boardX-1)/2
+  @centerY: (@boardY-1)/2
+
   # Default amount of each numbered tiles 
   # 6 #1s, 6 #2s, 7 #3s, etc.
   @tileCounts: [0, 6, 6, 7, 10, 6, 10, 14, 12, 12, 7]
@@ -28,8 +31,8 @@ class GameState
         t.push(tile)
     t)()
 
-  # Empty board with no tiles played yet
-  @emptyBoard: (null for x in [0...@boardX] for y in [0...@boardY])
+  # Returns number between [-0.5, 0.5]
+  @randomSorter: -> 0.5 - Math.random()
 
   # Create an empty Quinto game
   @empty: (game) =>
@@ -39,8 +42,8 @@ class GameState
     scores = (0 for p in game.players)
     new @(null, {
       game: game,
-      tiles: @tiles.slice().sort(-> 0.5 - Math.random()),
-      board: @emptyBoard,
+      tiles: @tiles.slice().sort(@randomSorter),
+      board: {},
       racks: racks,
       scores:scores,
       lastMove: null,
@@ -51,7 +54,7 @@ class GameState
     })
 
   # Create a new GameState based on the previous GameState with the given changes
-  constructor: (@previous, changes) ->
+  constructor: (previous, changes) ->
     for own k, v of changes
       @[k] = v
     for own k, v of previous
@@ -103,7 +106,9 @@ class GameState
     new GameState(@, changes)
 
   checkMove: (moves, b, rack) =>
-    board = (xs.slice() for xs in @board)
+    board = {}
+    for own k, v of b
+      board[k] = v
     rack = rack.slice()
     ts = @translateMoves(moves)
     for [n, x, y] in ts
@@ -132,23 +137,23 @@ class GameState
       scores[@translatePos(ts[0][1], ts[0][2])] = ts[0][0]
     else
       for [n, x, y] in ts
-        @xRun(scores, b, y, x) if b[y][x+1] or b[y][x-1]
-        @yRun(scores, b, y, x) if (y > 0 and b[y-1][x]) or (y < GameState.boardY - 1 and b[y+1][x])
+        @xRun(scores, b, y, x) if b[@translatePos(x+1, y)] or b[@translatePos(x-1, y)]
+        @yRun(scores, b, y, x) if b[@translatePos(x, y+1)] or b[@translatePos(x, y-1)]
     scores
 
   xRun: (scores, b, y, x) ->
     xMin = x
     xMax = x
-    xMin-- while b[y][xMin-1]
-    xMax++ while b[y][xMax+1]
-    scores["#{y}#{@translateCol(xMin)}-#{@translateCol(xMax)}"] ?= @sum(b[y][i] for i in [xMin..xMax])
+    xMin-- while b[@translatePos(xMin-1, y)]
+    xMax++ while b[@translatePos(xMax+1, y)]
+    scores["#{y}#{@translateCol(xMin)}-#{@translateCol(xMax)}"] ?= @sum(b[@translatePos(i, y)] for i in [xMin..xMax])
 
   yRun: (scores, b, y, x) ->
     yMin = y
     yMax = y
-    yMin-- while b[yMin-1] and b[yMin-1][x]
-    yMax++ while b[yMax+1] and b[yMax+1][x]
-    scores["#{@translateCol(x)}#{yMin}-#{yMax}"] ?= @sum(b[i][x] for i in [yMin..yMax])
+    yMin-- while b[@translatePos(x, yMin-1)]
+    yMax++ while b[@translatePos(x, yMax+1)]
+    scores["#{@translateCol(x)}#{yMin}-#{yMax}"] ?= @sum(b[@translatePos(x, i)] for i in [yMin..yMax])
 
   sum: (a) ->
     score = 0
@@ -203,16 +208,16 @@ class GameState
           else if row != x
             throw("attempt to place tile not in same row: row: #{row}, pos: #{@translatePos(x, y)}")
       unless @empty() && i == 0
-        unless b[y][x-1] or (y > 0 and b[y-1][x]) or b[y][x+1] or (y < my - 1 and b[y+1][x])
+        unless b[@translatePos(x-1, y)] or b[@translatePos(x, y-1)] or b[@translatePos(x+1, y)] or b[@translatePos(x, y+1)]
           throw("attempt to place tile not adjacent to existing tile: pos: #{@translatePos(x, y)}")
-      if b[y][x]
-        throw("attempt to place tile over existing tile: pos: #{@translatePos(x, y)} tile: #{n}, existing: #{b[y][x]}")
+      if b[@translatePos(x, y)]
+        throw("attempt to place tile over existing tile: pos: #{@translatePos(x, y)} tile: #{n}, existing: #{b[@translatePos(x, y)]}")
       else
-        b[y][x] = n
+        b[@translatePos(x, y)] = n
       i += 1
     if @empty()
-      unless b[8][8]
-        throw("opening move must have tile placed in center square (i8)")
+      unless b[@translatePos(GameState.centerX, GameState.centerY)]
+        throw("opening move must have tile placed in center square (#{@translatePos(GameState.centerX, GameState.centerY)})")
       unless @sum(n for [n, x, y] in ts) % GameState.sumEqual == 0 
         throw("opening move must sum to multiple of #{GameState.sumEqual}")
 
@@ -221,7 +226,7 @@ class GameState
     nadj_ts = []
     change = false
     for [n, x, y] in ts
-      if b[y][x-1] or (y > 0 and b[y-1][x]) or b[y][x+1] or (y < GameState.boardY - 1 and b[y+1][x])
+      if b[@translatePos(x-1, y)] or b[@translatePos(x, y-1)] or b[@translatePos(x+1, y)] or b[@translatePos(x, y+1)]
         change = true
         adj_ts.unshift([n, x, y])
       else
@@ -252,11 +257,11 @@ class GameState
     while y < my
       x = 0
       while x < mx
-        s = b[y][x]
+        s = b[@translatePos(x, y)]
         if s
           l = 1
           for i in [1..ml]
-            si = b[y][x+i]
+            si = b[@translatePos(x+i, y)]
             break unless si
             s += si
             l++
@@ -272,11 +277,11 @@ class GameState
     while x < mx
       y = 0
       while y < my
-        s = b[y][x]
+        s = b[@translatePos(x, y)]
         if s
           l = 1
           for i in [1..ml]
-            si = if b[y+i] then b[y+i][x] else null
+            si = b[@translatePos(x, y+i)]
             break unless si
             s += si
             l++
@@ -298,9 +303,10 @@ class GameState
     throw("attempt to use tile not in rack: tile: #{n}, rack: #{rack}")
 
 class Game
-  constructor: (@players) -> @state = GameState.empty(@)
-  move: (moves) => @state = @state.move(moves)
-  pass: => @state = @state.pass()
+  constructor: (@players) -> @states = [GameState.empty(@)]
+  state: => @states[@states.length-1]
+  move: (moves) => @states.push(@state().move(moves))
+  pass: => @states.push(@state().pass())
 
 if exports?
   exports.Player = Player
