@@ -41,9 +41,14 @@ actionHandler.updateInfo = (a) ->
 
   $('#rack').html("<h2>Your Tile Rack:</h2><table><tr>#{("<td class='rack_tile' id='rack#{i}'>#{x}</td>" for x, i in gs.rack).join('')}</tr></table>")
   $('#scores').html("<h2>Scores:<h2><table>#{("<tr><td>#{if i == gs.playerId then 'You' else p}:</td><td>#{gs.scores[i]}</td></tr>" for p, i in gs.players).join('')}</table>")
-  $('#current_move').html('')
-  if gs.playerId != gs.toMove
-    actionHandler.poll(a)
+  if gs.gameOver
+    $('#current_move').html("<h2>Game Over!</h2><h2>Winners: #{gs.winners.join(', ')}</h2>")
+  else
+    $('#current_move').html('')
+    if gs.playerId != gs.toMove
+      actionHandler.poll(a)
+    else
+      checkMove()
 
 actionHandler.newGame = (a) ->
   window.game = new Game(new Player(p) for p in a.players)
@@ -89,6 +94,12 @@ sendMove = ->
     .success(handleActions)
     .error((data) -> $('#current_move').html("<h2>Server Error: #{data.responseText}</h2>"))
 
+sendPass = ->
+  gs = gameState()
+  $.post("/game/pass/#{gs.playerId}")
+    .success(handleActions)
+    .error((data) -> $('#current_move').html("<h2>Server Error: #{data.responseText}</h2>"))
+
 processTiles = ->
   b = $('.board_tile.current')
   r = $('.rack_tile.current')
@@ -101,15 +112,17 @@ processTiles = ->
 
 checkMove = ->
   move = getMove()
+  gs = gameState()
   if move
-    gs = gameState()
     try
       changes = gs.checkMove(move, gs.board, gs.rack)
       $('#current_move').html("<h2>Move Score: #{changes.score}<br />Runs:</h2><table>#{("<tr><td>#{k}:</td><td>#{v}</td></tr>" for k, v of changes.lastRuns).join('')}</table><button type='button' id='commit_move'>Commit Move</button>")
       $('#commit_move').click(sendMove)
     catch error
       $("#current_move").html("<h2>#{error}</h2>")
-
+  else
+    $('#current_move').html("<button type='button' id='pass'>Pass#{if gs.passCount == gs.players.length - 1 then ' and End Game' else ''}</button>")
+    $('#pass').click(sendPass)
 
 $(document).ready -> actionHandler.startPage()
 

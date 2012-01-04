@@ -21,7 +21,7 @@ parseInt10 = (v) -> parseInt(v, 10)
 pI = (req) -> parseInt(req.param('playerId'), 10)
 
 boardJson = (gs, playerId)->
-  {
+  json = {
     action: 'updateInfo'
     state: {
       board: gs.board
@@ -29,11 +29,16 @@ boardJson = (gs, playerId)->
       players: (p.email for p in gs.game.players)
       scores: gs.scores
       toMove: gs.toMove
+      passCount: gs.passCount
       moveCount: gs.moveCount
       playerId: playerId
     }
     poll: "/game/check/#{playerId}/#{gs.moveCount}"
   }
+  if gs.gameOver
+    json.state.gameOver = true
+    json.state.winners = (winner.email for winner in gs.winners)
+  json
 
 app.get '/game/check/:playerId/:moveCount', (req, res) ->
   gs = app.gameState(req)
@@ -44,15 +49,20 @@ app.get '/game/check/:playerId/:moveCount', (req, res) ->
   else
     res.json([boardJson(gs, i)])
 
-app.post '/game/move/:playerId', (req, res) ->
-  gs = app.gameState(req)
-  i = pI(req)
-  if i == gs.toMove
-    gs.game.move(req.param('move'))
-    gs = gs.game.state()
-    res.json([boardJson(gs, i)])
-  else
-    throw new Error('Not your turn')
+moveOrPass = (f) ->
+  (req, res) ->
+    gs = app.gameState(req)
+    i = pI(req)
+    if i == gs.toMove
+      f(gs, req)
+      gs = gs.game.state()
+      res.json([boardJson(gs, i)])
+    else
+      throw new Error('Not your turn')
+
+
+app.post '/game/move/:playerId', moveOrPass((gs, req) -> gs.game.move(req.param('move')))
+app.post '/game/pass/:playerId', moveOrPass((gs, req) -> gs.game.pass())
 
 app.get '/game/join/:playerId', (req, res) ->
   gs = app.gameState(req)
