@@ -48,11 +48,13 @@ actionHandler.startPage = (a) ->
 selectTile = (e) ->
   exist = $(e.data)
   t = $(e.target)
-  exist.filter('.current').removeClass('current')
-  if t.hasClass('fixed')
+  if t.hasClass('current')
+    t.removeClass('current')
+  else if t.hasClass('fixed')
     # Ignore, can't operate on already placed tile
     null
   else
+    exist.filter('.current').removeClass('current')
     if t.hasClass('move')
       # If already in move, remove
       if e.data == '.board_tile'
@@ -85,7 +87,11 @@ processTiles = ->
     b.data('assoc', r)
     r.data('assoc', b)
     b.add(r).addClass('move').removeClass('current')
-    move = getMove()
+  checkMove()
+
+checkMove = ->
+  move = getMove()
+  if move
     gs = gameState()
     try
       changes = gs.checkMove(move, gs.board, gs.rack)
