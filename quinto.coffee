@@ -55,11 +55,11 @@ class GameState
 
   # Create a new GameState based on the previous GameState with the given changes
   constructor: (previous, changes) ->
-    for own k, v of changes
-      @[k] = v
     for own k, v of previous
       unless v instanceof Function
-        @[k] ?= v
+        @[k] = v
+    for own k, v of changes
+      @[k] = v
 
     if @gameOver
       throw("Game already ended, can't make more moves")
