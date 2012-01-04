@@ -6,7 +6,7 @@ global.GameState = Q.GameState
 GameState.prototype.print = (x) -> process.stdout.write(x)
 
 GameState.prototype.show = ->
-    unless @empty
+    unless @empty()
       if @lastMove
         @print("Last Move: #{@lastMove}\n")
         for k, v of @lastRuns
@@ -33,11 +33,11 @@ GameState.prototype.show = ->
     @print("\n\nBoard\n  -")
     for i in [0...mx]
       @print("---")
-    for xs, y in @board.slice().reverse()
-      y2 = my-y-1
-      @print("\n#{if y2 < 10 then " " else ""}#{y2}|")
-      for i in xs
-        @print("#{if i < 10 then " " else ""}#{i or " "}|")
+    for y in [0...my]
+      @print("\n#{if y < 10 then " " else ""}#{y}|")
+      for x in [0...mx]
+        i = @board[@translatePos(x, y)]
+        @print("#{if i > 10 then "" else " "}#{i or " "}|")
     @print("\n  |")
     for i in [0...mx]
       @print("--+")
@@ -49,8 +49,8 @@ GameState.prototype.show = ->
 global.g = (new Q.Game [new Q.Player('player1@foo.com'), new Q.Player('player2@bar.com')])
 global.m = (a) ->
   g.move(a)
-  g.state.show()
+  g.state().show()
 global.p = ->
-  g.pass
-  g.state.show()
-g.state.show()
+  g.pass()
+  g.state().show()
+g.state().show()
