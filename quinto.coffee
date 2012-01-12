@@ -1,5 +1,5 @@
 class Player
-  constructor: (@email) ->
+  constructor: (@name, @email, @token) ->
 
 class GameState
   # Number of tiles each player has at one time
@@ -76,8 +76,6 @@ class GameState
         if x.length == 0
           @gameOver = true
 
-    @winners = @determineWinners() if @gameOver
-
   # Sort function for rack tiles
   rackSort: (a, b) -> parseInt(a, 10) - parseInt(b, 10)
 
@@ -125,7 +123,7 @@ class GameState
 
   empty: => @moveCount - @passCount == 0
 
-  determineWinners: =>
+  winners: =>
     max = 0
     for s in @scores
       max = s if s > max

@@ -9,6 +9,7 @@ table {margin: auto;}
 #board table {background-color: gray; margin: 0;}
 #board table, #board tr, #board td { border: solid #555 2px; }
 #board td {width: 30px; height: 30px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; padding: 1px; }
+#board td:hover {border-color: #ccc;}
 #i8 {background-color: #666; }
 
 #rack h2 {margin-top: 30px;}

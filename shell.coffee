@@ -17,12 +17,12 @@ GameState.prototype.show = ->
 
       @print("Scores:\n")
       for s, i in @scores
-        @print("#{@game.players[i].email}: #{s}\n")
+        @print("#{@game.players[i].name}: #{s}\n")
 
     if @gameOver
-      @print("\nWinners: #{(p.email for p in @winners).join(', ')}")
+      @print("\nWinners: #{(p.name for p in @winners()).join(', ')}")
     else
-      @print("\nCurrent Player: #{@game.players[@toMove].email}")
+      @print("\nCurrent Player: #{@game.players[@toMove].name}")
 
       @print("\n\nCurrent Rack: ")
       for t in @racks[@toMove]
@@ -46,7 +46,7 @@ GameState.prototype.show = ->
       @print(" #{String.fromCharCode(97+i)}|")
     @print("\n")
 
-global.g = (new Q.Game [new Q.Player('player1@foo.com'), new Q.Player('player2@bar.com')])
+global.g = (new Q.Game [new Q.Player('Foo'), new Q.Player('Bar')])
 global.m = (a) ->
   g.move(a)
   g.state().show()
