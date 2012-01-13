@@ -75,6 +75,11 @@ class GameState
       for x in @racks
         if x.length == 0
           @gameOver = true
+    
+    # Subtract unplayed tiles from final score
+    if @gameOver
+      for r, i in @racks
+        @scores[i] -= @sum(r)
 
   # Sort function for rack tiles
   rackSort: (a, b) -> parseInt(a, 10) - parseInt(b, 10)
