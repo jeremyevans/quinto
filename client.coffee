@@ -97,11 +97,14 @@ actionHandler.gameOver = (a) ->
   $('#current_move').html("<h2>Game Over!</h2><h2>Winners: #{a.winners.join(', ')}</h2>")
 
 actionHandler.setPlayer = (a) ->
-  $('#register').html('')
-  $('#login').html('')
+  $('#login, #register').remove()
   window.playerId = a.player.id
   window.playerToken = a.player.token
   window.playerEmail = a.player.email
+  window.playerName = a.player.name
+  initPlayer()
+
+initPlayer = ->
   $("#new_game").html("<a href='#'>Start New Game</a>")
   $("#new_game a").click(->
     $('#new_game').html("<form><input name='emails' placeholder='Emails of other players'/><input type='submit' value='Start New Game'/></form>")
@@ -109,13 +112,16 @@ actionHandler.setPlayer = (a) ->
   )
   $("#join_game").html("<a href='#'>Join Game</a>")
   $("#join_game a").click(-> request('/game/list'))
-  $("#current_move").html("Thanks for logging in, #{escape(a.player.name)}")
+  $("#current_move").html("Thanks for logging in, #{escape(window.playerName)}")
+  $('#leave_game, #board, #rack, #scores').html('')
   
 actionHandler.newGame = (a) ->
   window.gameId = a.gameId
   window.game = new Game(new Player(p) for p in a.players)
   window.playerPosition = a.position
-  $('#login, #register, #new_game, #join_game').remove()
+  $('#new_game, #join_game').html('')
+  $("#leave_game").html("<a href='#'>Leave Game</a>")
+  $("#leave_game a").click(initPlayer)
 
 actionHandler.listGames = (a) ->
   options = for g in a.games
@@ -123,11 +129,60 @@ actionHandler.listGames = (a) ->
   $('#join_game').html("<form><select name='gameId'>#{options}</select><input type='submit' value='Join Game'/></form>")
   $("#join_game form").submit(-> request('/game/join', -> $('#join_game form').serializeObject()))
 
-actionHandler.startPage = (a) ->
+startPage = (a) ->
   $('#register a').click(register)
   $('#login a').click(login)
+  $('#rules a').click(showRules)
   $(document).on('click', '.board_tile', '.board_tile', selectTile)
   $(document).on('click', '.rack_tile', '.rack_tile', selectTile)
+
+hideRules = ->
+  $("#rules").html("<h2 class='link'><a href='#'>Rules</a></h2>")
+  $("#rules a").click(showRules)
+
+showRules = ->
+  $('#rules').html("
+    <h2 class='link'><a href='#'>Hide Rules</a></h2>
+
+    <h2>How to Play Quinto</h2>
+
+    <h3>Object of the Game</h3>
+
+    <p>Each player, in turn, tries to play from one to five tiles
+    in a row, either rank or file, with at least one of his tiles
+    touching one previously played.  The face numbers on the tile
+    must total 5 or a multiple of 5 in all directions (just as a
+    crossword puzzle must make sense in all directions).  Each
+    player scores the total of the face numbers in rows he has
+    completed.  High scorer wins.</p>
+
+    <h3>Play</h3>
+
+    <p><b>First player</b>: Place from one to five of your tiles in a straight
+    line, either rank (across) or file (down).  One of these played
+    tiles must be placed on the center square of the board.  The face
+    numbers must total 5 or a multiple of 5 (10, 15, etc.).  After
+    playing, draw again to keep a total of five tiles before you.</p>
+
+    <p><b>Other players</b>: Do the same, placing at least one of your
+    tiles touching one previously placed.  The tiles must total 5 or a
+    multiple of 5 in all directions.</p>
+
+    <p>A short row (fewer than five) may be extended by another player.
+    A row may never contain more than 5 tiles.  If it is your turn, you
+    can choose to pass instead of making a move on the board.</p>
+
+    <h3>Scoring</h3>
+
+    <p>Your score is the same as the total of the face numbers on the
+    tiles in all of the rows you have completed.  Although you must play
+    your tiles in only one direction in one turn, you will discover it
+    is possible to score in several directions at once.</p>
+
+    <p>When all of the playable tiles have been used, the player with the
+    highest score wins.  Any unplayed tiles are subtracted from the holder's
+    score.</p>")
+  $('#rules a').click(hideRules)
 
 login = ->
   $('#login').html("<form id='login_form' action='#'><input name='email' placeholder='Email'/><input type='password' name='password' placeholder='Password'/><input type='submit' value='Login'/></form>")
@@ -197,7 +252,7 @@ checkMove = ->
     $('#current_move').html("<button type='button' id='pass'>Pass#{if gs.passCount == gs.players.length - 1 then ' and End Game' else ''}</button>")
     $('#pass').click(sendPass)
 
-$(document).ready -> actionHandler.startPage()
+$(document).ready -> startPage()
 
 window.Player = Player
 window.Game = Game

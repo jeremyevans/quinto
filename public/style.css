@@ -1,9 +1,13 @@
+h1 {font-size: 32px; }
+h2 {font-size: 24px; }
+h3 {font-size: 20px; }
+body {font-size: 16px; }
 h1, h2, div {text-align: center;}
 table {margin: auto;}
 #board .board_tile, #rack .rack_tile {color: white;}
 #board .fixed, #board #i8.fixed, #rack .rack_tile {background-color: saddleBrown;}
-#board .move, #rack .move {background-color: gold; color: black; }
-#board .current, #rack .current {background-color: yellow; color: black; }
+#board .move, #board #i8.move, #rack .move {background-color: gold; color: black; }
+#board .current, #board #i8.current, #rack .current {background-color: yellow; color: black; }
 
 #board_rack {float: right; text-align: left; width: 50%; }
 #board table, #board tr, #board td {background-color: gray; border: solid #555 2px; }
@@ -16,3 +20,6 @@ table {margin: auto;}
 .rack_tile { border: solid black 2px; float: left; margin-right: 20px;}
 #rack4 { margin-right: 0;}
 
+#rules {width: 600px; margin: auto; clear: both;}
+#rules h2, #rules h3, #rules p {text-align: left;}
+#rules h2.link {text-align: center;}
