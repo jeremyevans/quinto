@@ -26,20 +26,25 @@ loadPlayer = (req) ->
 loadGame = (req) ->
   Q.Game.load(parseInt10(req.param('gameId')))
 
+pollAction = (gs) ->
+  {action: 'poll', poll: "/game/check/#{gs.moveCount}"}
+
 updateActions = (gs, player)->
+  pos = playerPosition(gs.game, player)
   actions = [{
     action: 'updateInfo'
     state: {
       board: gs.board
-      rack: gs.racks[playerPosition(gs.game, player)]
+      rack: gs.racks[pos]
       players: (p.name for p in gs.game.players)
       scores: gs.scores
       toMove: gs.toMove
       passCount: gs.passCount
       moveCount: gs.moveCount
     }
-    poll: "/game/check/#{gs.moveCount}"
   }]
+  unless pos == gs.toMove
+    actions.push(pollAction(gs))
   if gs.gameOver
     actions.unshift({action: "gameOver", winners: (p.name for p in gs.winners())})
   actions
@@ -60,7 +65,7 @@ app.get '/app.js', (req, res) ->
 app.get '/game/check/:moveCount', (req, res) ->
   gs = loadGame(req).state()
   if gs.moveCount == parseInt10(req.param('moveCount'))
-    res.json([{action: 'poll', poll: "/game/check/#{gs.moveCount}"}])
+    res.json([pollAction(gs)])
   else
     res.json(updateActions(gs, loadPlayer(req)))
 

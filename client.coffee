@@ -80,9 +80,7 @@ actionHandler.updateInfo = (a) ->
     $('#to_move').html(if gs.toMove == window.playerPosition then 'Your Turn!' else "#{gs.players[gs.toMove]}'s Turn")
     $('#rack').html("<div id='tile_holder'>#{("<div class='rack_tile' id='rack#{i}'>#{x}</div>" for x, i in gs.rack).join('')}</div><h2>Your Tile Rack</h2>")
     $('#current_move').html('')
-    if window.playerPosition != gs.toMove
-      actionHandler.poll(a)
-    else
+    unless window.playerPosition != gs.toMove
       $('.rack_tile').draggable({cursor: 'move', helper: 'clone'})
       $('.board_tile').droppable(drop: droppedTile)
       checkMove()
