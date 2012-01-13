@@ -8,12 +8,11 @@ require './persist_json'
 bcrypt = require 'bcrypt'
 
 app = express.createServer()
-app.client_js = -> cs.compile(fs.readFileSync('client.coffee', 'ascii') + fs.readFileSync('quinto.coffee', 'ascii'))
 app.use express.logger()
 app.use express.static("#{__dirname}/public")
 app.use express.bodyParser()
-app.use express.cookieParser()
-app.use express.session({secret: fs.readFileSync('session.secret', 'ascii')})
+
+client_js = -> cs.compile(fs.readFileSync('client.coffee', 'ascii') + fs.readFileSync('quinto.coffee', 'ascii'))
 
 parseInt10 = (v) -> parseInt(v, 10)
 
@@ -60,7 +59,7 @@ newGame = (game, player, res) ->
   res.json(actions)
 
 app.get '/app.js', (req, res) ->
-  res.send(app.client_js(), {'Content-Type': 'text/javascript'})
+  res.send(client_js(), {'Content-Type': 'text/javascript'})
 
 app.get '/game/check/:moveCount', (req, res) ->
   gs = loadGame(req).state()
