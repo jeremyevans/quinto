@@ -24,7 +24,7 @@ escape = (s) ->
   $('<div/>').text(s).html()
 
 addToken = (obj) ->
-  obj.gameId = window.gameId if window.gameId
+  obj.gameId or= window.gameId if window.gameId
   obj.playerId = window.playerId if window.playerId
   obj.playerToken = window.playerToken if window.playerToken
   obj
