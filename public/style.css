@@ -1,17 +1,18 @@
 h1, h2, div {text-align: center;}
 table {margin: auto;}
-#board td, #rack td {color: white;}
-#board td.fixed, #rack td {background-color: saddleBrown;}
-#board td.move, #rack td.move {background-color: gold; color: black; }
-#board td.current, #rack td.current {background-color: yellow; color: black; }
+#board .board_tile, #rack .rack_tile {color: white;}
+#board .fixed, #board #i8.fixed, #rack .rack_tile {background-color: saddleBrown;}
+#board .move, #rack .move {background-color: gold; color: black; }
+#board .current, #rack .current {background-color: yellow; color: black; }
 
-#board {float: right; text-align: left; width: 50%; }
-#board table {background-color: gray; margin: 0;}
-#board table, #board tr, #board td { border: solid #555 2px; }
-#board td {width: 30px; height: 30px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; padding: 1px; }
+#board_rack {float: right; text-align: left; width: 50%; }
+#board table, #board tr, #board td {background-color: gray; border: solid #555 2px; }
+#board td, .rack_tile {width: 30px; height: 30px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; padding: 1px; }
 #board td:hover {border-color: #ccc;}
-#i8 {background-color: #666; }
+#board #i8 {background-color: #666; }
 
-#rack h2 {margin-top: 30px;}
-#rack td { border: solid black 2px; }
-#rack td {width: 50px; height: 50px; text-align: center; font-size: 48px; font-weight: bold; }
+#rack h2 {clear: both; margin-top: 0;}
+#tile_holder {margin: 10px auto 0; height: 40px; width: 260px;}
+.rack_tile { border: solid black 2px; float: left; margin-right: 20px;}
+#rack4 { margin-right: 0;}
+

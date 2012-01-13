@@ -78,12 +78,20 @@ actionHandler.updateInfo = (a) ->
   $('#scores').html("<h2>Scores:<h2><table>#{("<tr><td>#{if i == window.playerPosition then 'You' else escape(p)}:</td><td>#{gs.scores[i]}</td></tr>" for p, i in gs.players).join('')}</table>")
   unless window.gameOver
     $('#to_move').html(if gs.toMove == window.playerPosition then 'Your Turn!' else "#{gs.players[gs.toMove]}'s Turn")
-    $('#rack').html("<h2>Your Tile Rack:</h2><table><tr>#{("<td class='rack_tile' id='rack#{i}'>#{x}</td>" for x, i in gs.rack).join('')}</tr></table>")
+    $('#rack').html("<div id='tile_holder'>#{("<div class='rack_tile' id='rack#{i}'>#{x}</div>" for x, i in gs.rack).join('')}</div><h2>Your Tile Rack</h2>")
     $('#current_move').html('')
     if window.playerPosition != gs.toMove
       actionHandler.poll(a)
     else
+      $('.rack_tile').draggable({cursor: 'move', helper: 'clone'})
+      $('.board_tile').droppable(drop: droppedTile)
       checkMove()
+
+droppedTile = (e, ui) ->
+  $('.current').removeClass('current')
+  ui.draggable.addClass('current')
+  $(@).addClass('current')
+  processTiles()
 
 actionHandler.gameOver = (a) ->
   window.gameOver = true
@@ -141,20 +149,24 @@ selectTile = (e) ->
     null
   else
     exist.filter('.current').removeClass('current')
+    d = t.data('assoc')
     if t.hasClass('move')
       # If already in move, remove
       if e.data == '.board_tile'
         t.html('')
-      else
-        t.data('assoc').html('')
-      t.data('assoc').removeClass('move')
+      else if d?
+        d.html('')
+      if d?
+        d.removeClass('move')
       t.removeClass('move')
     t.addClass('current')
     $("#current_move").html('')
     processTiles()
 
 getMove = ->
-  $('.rack_tile.move').map(->
+  $('.rack_tile.move').filter(->
+    $(@).data('assoc')?
+  ).map(->
     t = $(@)
     "#{t.html()}#{t.data('assoc').attr('id')}"
   ).get().join(' ')
