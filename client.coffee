@@ -105,6 +105,7 @@ actionHandler.setPlayer = (a) ->
   initPlayer()
 
 initPlayer = ->
+  window.gameOver = false
   $("#new_game").html("<a href='#'>Start New Game</a>")
   $("#new_game a").click(->
     $('#new_game').html("<form><input name='emails' placeholder='Emails of other players'/><input type='submit' value='Start New Game'/></form>")
