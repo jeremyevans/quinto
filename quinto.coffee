@@ -129,7 +129,7 @@ class GameState
   empty: => @moveCount - @passCount == 0
 
   winners: =>
-    max = 0
+    max = @scores[0]
     for s in @scores
       max = s if s > max
     @game.players[i] for s, i in @scores when s == max
