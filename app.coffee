@@ -11,19 +11,19 @@ app = express.createServer()
 app.use express.logger()
 app.use express.static("#{__dirname}/public")
 app.use express.bodyParser()
+app.use(express.errorHandler({ showStack: true, dumpExceptions: true}))
 
-client_js = -> cs.compile(fs.readFileSync('client.coffee', 'ascii') + fs.readFileSync('quinto.coffee', 'ascii'))
+client_js = cs.compile(fs.readFileSync('client.coffee', 'ascii') + fs.readFileSync('quinto.coffee', 'ascii'))
+
+enext = (next) ->
+  (err) ->
+    next(new Error(err))
+
+#app.error((err, req, res) ->
+#  res.send(err, 500)
+#)
 
 parseInt10 = (v) -> parseInt(v, 10)
-
-loadPlayer = (req) ->
-  player = Q.Player.load(parseInt10(req.param('playerId')))
-  unless player.token == req.param('playerToken')
-    throw "Invalid player token"
-  player
-
-loadGame = (req) ->
-  Q.Game.load(parseInt10(req.param('gameId')))
 
 pollAction = (gs) ->
   {action: 'poll', poll: "/game/check/#{gs.moveCount}"}
@@ -42,10 +42,10 @@ updateActions = (gs, player)->
       moveCount: gs.moveCount
     }
   }]
-  unless pos == gs.toMove
-    actions.push(pollAction(gs))
   if gs.gameOver
     actions.unshift({action: "gameOver", winners: (p.name for p in gs.winners())})
+  else if pos != gs.toMove
+    actions.push(pollAction(gs))
   actions
 
 playerPosition = (game, player) ->
@@ -58,62 +58,134 @@ newGame = (game, player, res) ->
   actions.unshift({action: 'newGame', players: (p.name for p in game.players), position: pos, gameId: game.id})
   res.json(actions)
 
-app.get '/app.js', (req, res) ->
-  res.send(client_js(), {'Content-Type': 'text/javascript'})
+loadPlayer = (req, e, f) ->
+  Q.Player.load(parseInt10(req.param('playerId')), e, (player) ->
+    if player.token == req.param('playerToken')
+      f(player)
+    else
+      console.log(player.token)
+      console.log(req.param('playerToken'))
+      e("Invalid player token")
+  )
 
-app.get '/game/check/:moveCount', (req, res) ->
-  gs = loadGame(req).state()
-  if gs.moveCount == parseInt10(req.param('moveCount'))
-    res.json([pollAction(gs)])
-  else
-    res.json(updateActions(gs, loadPlayer(req)))
+loadGame = (req, e, f) ->
+  Q.Game.load(parseInt10(req.param('gameId')), e, f)
 
 moveOrPass = (f) ->
-  (req, res) ->
-    player = loadPlayer(req)
-    game = loadGame(req)
+  (req, res, next) ->
+    e = enext(next)
+    loadPlayer(req, e, (player) ->
+      loadGame(req, e, (game) ->
+        gs = game.state()
+        if player.id == game.players[gs.toMove].id
+          f(gs, req)
+          gs = game.state()
+          gs.persist(e, ->
+            res.json(updateActions(gs, player))
+          )
+        else
+          e("Not your turn, current player is in position #{gs.toMove}, you are in position #{playerPosition(game, player)}")
+      )
+    )
+
+lookupPlayers = (emails, players, e, f) ->
+  email = emails.shift()
+  if email?
+    Q.Player.lookup(email, e, (player) ->
+      if player
+        delete player.hash
+        players.push(player)
+        lookupPlayers(emails, players, e, f)
+      else
+        e("No registered player with email: #{email}")
+    )
+  else
+    f(players)
+
+app.get '/app.js', (req, res, next) ->
+  res.send(client_js, {'Content-Type': 'text/javascript'})
+
+app.get '/game/check/:moveCount', (req, res, next) ->
+  e = enext(next)
+  loadGame(req, e, (game) ->
     gs = game.state()
-    if player.id == game.players[gs.toMove].id
-      f(gs, req)
-      gs = game.state()
-      gs.persist()
-      res.json(updateActions(gs, player))
+    if gs.moveCount == parseInt10(req.param('moveCount'))
+      res.json([pollAction(gs)])
     else
-      throw new Error('Not your turn')
+      loadPlayer(req, e, (player) ->
+        res.json(updateActions(gs, player))
+      )
+  )
 
-app.post '/player/register', (req, res) ->
-  token = querystring.escape(crypto.randomBytes(16))
-  player = new Q.Player(req.param('name'), req.param('email'), token)
-  player.persist(bcrypt.encrypt_sync(req.param('password'), bcrypt.gen_salt_sync(10)))
-  res.json([action: 'setPlayer', player: player])
+app.post '/player/register', (req, res, next) ->
+  e = enext(next)
+  crypto.randomBytes(16, (err, buf) ->
+    if err
+      e(err)
+    else
+      token = querystring.escape(buf)
+      player = new Q.Player(req.param('name'), req.param('email'), token)
+      bcrypt.genSalt(10, (err, salt) ->
+        if err
+          e(err)
+        else
+          bcrypt.hash(req.param('password'), salt, (err, hash) ->
+            if err
+              e(err)
+            else
+              player.persist(hash, e, ->
+                res.json([action: 'setPlayer', player: player])
+              )
+          )
+      )
+  )
 
-app.post '/player/login', (req, res) ->
-  player = Q.Player.lookup(req.param('email'))
-  unless player or !bcrypt.compare_sync(req.param('password'), player.password)
-    throw "User not found or passwords don't match"
-  delete player.password
-  res.json([action: 'setPlayer', player: player])
+app.post '/player/login', (req, res, next) ->
+  e = enext(next)
+  Q.Player.lookup(req.param('email'), e, (player) ->
+    if player
+      bcrypt.compare(req.param('password'), player.hash, (err, matches) ->
+        if err
+          e(err)
+        else if matches
+          delete player.hash
+          res.json([action: 'setPlayer', player: player])
+        else
+          e("User not found or password doesn't match")
+      )
+    else
+      e("User not found or password doesn't match")
+  )
 
-app.post '/game/new', (req, res) ->
-  starter = loadPlayer(req)
-  players = for email in req.param('emails').split(new RegExp(' *, *'))
-    player = Q.Player.lookup(email)
-    unless player
-      throw "No registered player with email: #{email}"
-    delete player.password
-    player
-  players.unshift(starter)
-  game = new Q.Game(players)
-  game.persist()
-  game.state().persist()
-  newGame(game, starter, res)
+app.post '/game/new', (req, res, next) ->
+  e = enext(next)
+  loadPlayer(req, e, (starter) ->
+    lookupPlayers(req.param('emails').split(new RegExp(' *, *')), [], e, (players) ->
+      players.unshift(starter)
+      game = new Q.Game(players)
+      game.persist(e, ->
+        game.state().persist(e, ->
+          newGame(game, starter, res)
+        )
+      )
+    )
+  )
   
-app.get '/game/list', (req, res) ->
-  player = loadPlayer(req)
-  res.json([action: 'listGames', games: player.gameList()])
+app.get '/game/list', (req, res, next) ->
+  e = enext(next)
+  loadPlayer(req, e, (player) ->
+    player.gameList(e, (games) ->
+      res.json([action: 'listGames', games: games])
+    )
+  )
 
-app.get '/game/join', (req, res) ->
-  newGame(loadGame(req), loadPlayer(req), res)
+app.get '/game/join', (req, res, next) ->
+  e = enext(next)
+  loadPlayer(req, e, (player) ->
+    loadGame(req, e, (game) ->
+      newGame(game, player, res)
+    )
+  )
 
 app.post '/game/move', moveOrPass((gs, req) -> gs.game.move(req.param('move')))
 app.post '/game/pass', moveOrPass((gs, req) -> gs.game.pass())
