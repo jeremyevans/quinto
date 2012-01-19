@@ -3,7 +3,6 @@ cs = require 'coffee-script'
 Q = require "./quinto"
 fs = require "fs"
 crypto = require 'crypto'
-querystring = require 'querystring'
 require './persist_json'
 bcrypt = require 'bcrypt'
 
@@ -123,7 +122,7 @@ app.post '/player/register', (req, res, next) ->
     if err
       e(err)
     else
-      token = querystring.escape(buf)
+      token = buf.toString('base64')
       player = new Q.Player(req.param('name'), req.param('email'), token)
       bcrypt.genSalt(10, (err, salt) ->
         if err
