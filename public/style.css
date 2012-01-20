@@ -6,6 +6,7 @@ h1, h2, div {text-align: center;}
 table {margin: auto;}
 #board .board_tile, #rack .rack_tile {color: white;}
 #board .fixed, #board #i8.fixed, #rack .rack_tile {background-color: saddleBrown;}
+#board .fixed.last, #board #i8.fixed.last {background-color: blue;}
 #board .move, #board #i8.move, #rack .move {background-color: gold; color: black; }
 #board .current, #board #i8.current, #rack .current {background-color: yellow; color: black; }
 

@@ -59,6 +59,7 @@ actionHandler.poll = (a) ->
 
 actionHandler.updateInfo = (a) ->
   gs = gameState()
+  oldBoard = gs.board
   for k, v of a.state
     gs[k] = v
   board = gs.board
@@ -70,7 +71,7 @@ actionHandler.updateInfo = (a) ->
     for x in [0...GameState.boardX]
       pos = tp(x, y)
       value = board[pos]
-      board_html += "<td class='board_tile#{if value then ' fixed' else ''}' id='#{pos}'>#{if value then value else ''}</td>"
+      board_html += "<td class='board_tile#{if value then ' fixed' else ''}#{if oldBoard[pos] then '' else ' last'}' id='#{pos}'>#{if value then value else ''}</td>"
     board_html += "</tr>"
   board_html += "</table>"
   $('#board').html(board_html)
