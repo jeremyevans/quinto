@@ -1,5 +1,6 @@
 class Player
   constructor: (@name, @email, @token) ->
+    throw "player must have a name" unless @name
 
 class GameState
   # Number of tiles each player has at one time
@@ -36,8 +37,8 @@ class GameState
 
   # Create an empty Quinto game
   @empty: (game) =>
-    if game.players.length == 0
-      throw("must have at least 1 player")
+    if game.players.length < 2
+      throw("must have at least 2 players")
     racks = ([] for p in game.players)
     scores = (0 for p in game.players)
     new @(null, {
@@ -120,8 +121,7 @@ class GameState
     @checkBoard(board)
     runs = @getRuns(board, ts)
     score = @sum(v for k, v of runs)
-    changes = {board: board, rack: rack, score: score, lastMove: moves, lastRuns: runs, passCount: 0}
-    changes
+    {board: board, rack: rack, score: score, lastMove: moves, lastRuns: runs, passCount: 0}
 
   # Pass making a move on the board, returning the new GameState
   pass: => new GameState(@, {lastMove: null, lastRuns: null, passCount: @passCount+1})
