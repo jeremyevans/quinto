@@ -108,10 +108,9 @@ actionHandler.setPlayer = (a) ->
 initPlayer = ->
   window.gameOver = false
   $("#new_game").html("<a href='#'>Start New Game</a>")
-  $("#new_game a").click(->
+  $("#new_game a").click ->
     $('#new_game').html("<form><input name='emails' placeholder='Emails of other players'/><input type='submit' value='Start New Game'/></form>")
     $('#new_game form').submit(post('/game/new', -> $('#new_game form').serializeObject()))
-  )
   $("#join_game").html("<a href='#'>Join Game</a>")
   $("#join_game a").click(-> request('/game/list'))
   $("#current_move").html("Thanks for logging in, #{escape(window.playerName)}")
