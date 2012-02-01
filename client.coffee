@@ -71,7 +71,15 @@ actionHandler.updateInfo = (a) ->
     for x in [0...GameState.boardX]
       pos = tp(x, y)
       value = board[pos]
-      board_html += "<td class='board_tile#{if value then ' fixed' else ''}#{if oldBoard[pos] then '' else ' last'}' id='#{pos}'>#{if value then value else ''}</td>"
+      board_html += "<td class='board_tile"
+      if value
+        board_html += ' fixed'
+        unless oldBoard[pos]
+          board_html += ' last'
+      board_html += "' id='#{pos}'>"
+      if value
+        board_html += value
+      board_html += "</td>"
     board_html += "</tr>"
   board_html += "</table>"
   $('#board').html(board_html)
