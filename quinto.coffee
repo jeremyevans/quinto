@@ -36,12 +36,12 @@ class GameState
   @randomSorter: -> 0.5 - Math.random()
 
   # Create an empty Quinto game
-  @empty: (game) =>
+  @empty: (game, opts) =>
     if game.players.length < 2
       throw("must have at least 2 players")
     racks = ([] for p in game.players)
     scores = (0 for p in game.players)
-    new @(null, {
+    changes = {
       game: game,
       tiles: @tiles.slice().sort(@randomSorter),
       board: {},
@@ -52,7 +52,10 @@ class GameState
       passCount: 0,
       moveCount: -1,
       gameOver: false
-    })
+    }
+    for own k, v of opts
+      changes[k] = v
+    new @(null, changes)
 
   # Create a new GameState based on the previous GameState with the given changes
   constructor: (previous, changes) ->
@@ -306,7 +309,8 @@ class GameState
     throw("attempt to use tile not in rack: tile: #{n}, rack: #{rack}")
 
 class Game
-  constructor: (@players) -> @states = [GameState.empty(@)]
+  constructor: (@players, opts) ->
+    @states = [GameState.empty(@, opts)]
   state: => @states[@states.length-1]
   move: (moves) => @states.push(@state().move(moves))
   pass: => @states.push(@state().pass())
