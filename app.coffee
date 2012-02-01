@@ -5,6 +5,7 @@ fs = require "fs"
 crypto = require 'crypto'
 require './persist_json'
 bcrypt = require 'bcrypt'
+TEST_MODE = process.env.QUINTO_TEST == '1'
 
 app = express.createServer()
 app.use express.logger()
@@ -159,9 +160,19 @@ app.post '/player/login', (req, res, next) ->
 app.post '/game/new', (req, res, next) ->
   e = enext(next)
   loadPlayer(req, e, (starter) ->
-    lookupPlayers(req.param('emails').split(new RegExp(' *, *')), [], e, (players) ->
+    emails = if TEST_MODE
+      ems = req.param('emails').split(':', 2)
+      tiles = JSON.parse(ems[1])
+      ems[0]
+    else
+      req.param('emails')
+
+    lookupPlayers(emails.split(new RegExp(' *, *')), [], e, (players) ->
       players.unshift(starter)
-      game = new Q.Game(players)
+      game = if TEST_MODE and tiles?
+        new Q.Game(players, {tiles: tiles})
+      else
+        new Q.Game(players)
       game.persist(e, ->
         game.state().persist(e, ->
           newGame(game, starter, res)
