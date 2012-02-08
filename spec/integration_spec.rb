@@ -6,7 +6,7 @@ require 'capybara/rspec'
 require 'headless'
 
 Capybara.javascript_driver = :webkit
-SLEEP_TIME = 0.2
+SLEEP_TIME = ENV['SLEEP_TIME'] ? ENV['SLEEP_TIME'].to_f : 0.2
 
 RSpec.configure do |c|
   c.before do
@@ -94,6 +94,141 @@ describe 'Quinto Site', :type=>:request, :js=>true do
     h.should =~ /Start New Game/
     h.should =~ /Join Game/
     h.should =~ /Thanks for logging in, Bar/
+
+    # Test starting game right after registering
+    click_link 'Start New Game'
+    fill_in('emails', :with=>'foo@bar.com:[3,4,4,8,10,2,2,3,4,10,7,9,5,8,6,8,8,7,2,4,6,1,7,2,1,7,9,9,7,6,4,3,5,5,10,8,4,8,8,9,6,1,5,1,9,3,10,7,8,8,4,7,6,7,4,8,1,4,7,5,10,7,3,9,10,7,3,6,2,7,10,9,4,6,5,6,3,9,8,9,8,9,7,6,2,9,1,7,9,6]')
+    click_button 'Start New Game'
+    page.html.should =~ /Your Turn!/
+
+    # Test passing
+    click_button 'Pass'
+    page.html.should =~ /Foo's Turn/
+
+    # Test leaving and reentering game
+    click_link 'Leave Game'
+    click_link 'Join Game'
+    wait
+    click_button 'Join Game'
+    page.html.should =~ /Foo's Turn/
+
+    # Test dragging and dropping tiles
+    join_game(:foo)
+    page.find_by_id('rack4').drag_to(page.find_by_id('i8'))
+    click_button 'Commit Move'
+
+    # Test dragging and dropping same rack tile twice
+    # removes previous place
+    join_game(:bar)
+    page.find_by_id('rack4').drag_to(page.find_by_id('j8'))
+    page.find('#h8').text.should == ''
+    page.find('#j8').text.should == '10'
+    page.find_by_id('rack4').drag_to(page.find_by_id('h8'))
+    page.find('#h8').text.should == '10'
+    page.find('#j8').text.should == ''
+
+    # Test dragging and dropping different rack tile to same
+    # board tile removes previous place
+    join_game(:bar)
+    page.find_by_id('rack4').drag_to(page.find_by_id('j8'))
+    page.find('#j8').text.should == '10'
+    page.find_by_id('rack3').drag_to(page.find_by_id('j8'))
+    page.find('#j8').text.should == '8'
+    page.find_by_id('rack4').drag_to(page.find_by_id('h8'))
+    page.find('#h8').text.should == '10'
+    page.find('#j8').text.should == '8'
+
+    # Test nothing happens if you drop rack tile over
+    # previously played tile
+    join_game(:bar)
+    page.find_by_id('rack3').drag_to(page.find_by_id('i8'))
+    page.find('#i8').text.should == '10'
+
+    # Test clicking on board then rack
+    join_game(:bar)
+    click("#i7")
+    click("#rack0")
+    page.find('#i7').text.should == '3'
+    
+    # Test clicking on rack and then on board
+    click("#rack1")
+    click("#i6")
+    page.find('#i6').text.should == '4'
+
+    # Test error message when current move invalid
+    page.html.should =~ /consecutive tiles do not sum to multiple of 5/i
+
+    # Test error message removed when current move valid
+    click("#rack3")
+    click("#i5")
+    page.find('#i5').text.should == '8'
+    page.html.should_not =~ /consecutive tiles do not sum to multiple of 5/i
+    page.html.should =~ /Move Score: 25/
+    page.html.should =~ /i5-8:.+25/
+    
+    # Test clicking on existing board tile and then rack tile removes
+    # existing rack tile and uses new rack tile
+    click("#i5")
+    page.find('#i5').text.should == ''
+    click("#rack2")
+    page.find('#i5').text.should == '4'
+
+    # Test clicking on existing board tile twice just removes board tile 
+    click("#i5")
+    click("#i5")
+    page.find('#i5').text.should == ''
+    click("#rack2")
+    page.find('#i5').text.should == ''
+    click("#i5")
+    page.find('#i5').text.should == '4'
+
+    # Test clicking on existing rack tile and then board tile moves rack
+    # tile to new board place
+    click("#rack2")
+    page.find('#i5').text.should == ''
+    click("#i4")
+    page.find('#i4').text.should == '4'
+    
+    # Test clicking on existing rack tile twice just removes rack tile
+    click("#rack2")
+    click("#rack2")
+    page.find('#i5').text.should == ''
+    click("#i4")
+    page.find('#i4').text.should == ''
+    click("#rack2")
+    page.find('#i4').text.should == '4'
+
+    # Test clicking on one board tile then another just removes the tiles
+    click("#i4")
+    page.find('#i4').text.should == ''
+    click("#i5")
+    page.find('#i5').text.should == ''
+    click("#i6")
+    page.find('#i6').text.should == ''
+    click("#i7")
+    page.find('#i7').text.should == ''
+    click("#rack0")
+    page.find('#i7').text.should == '3'
+
+    click("#rack1")
+    click("#i6")
+    page.find('#i6').text.should == '4'
+    click("#rack2")
+    click("#i5")
+    page.find('#i5').text.should == '4'
+
+    # Test clicking on one played rack tile then another just removes
+    # the tiles
+    click("#rack2")
+    page.find('#i5').text.should == ''
+    click("#rack1")
+    page.find('#i6').text.should == ''
+    click("#rack0")
+    page.find('#i7').text.should == ''
+    click("#i6")
+    page.find('#i6').text.should == '3'
+
+    ## Play a full game without errors
 
     # Logging in and starting new game
     login_foo
