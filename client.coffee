@@ -95,10 +95,23 @@ actionHandler.updateInfo = (a) ->
       checkMove()
 
 droppedTile = (e, ui) ->
-  $('.current').removeClass('current')
-  ui.draggable.addClass('current')
-  $(@).addClass('current')
-  processTiles()
+  b = $(@)
+
+  unless b.hasClass('fixed')
+    r = ui.draggable
+    $('.current').removeClass('current')
+    b.addClass('current')
+    r.addClass('current')
+
+    if r2 = b.data('assoc')
+      r2.data('assoc', null)
+      r2.removeClass('move')
+    if b2 = r.data('assoc')
+      b2.html('')
+      b2.data('assoc', null)
+      b2.removeClass('move')
+
+    processTiles()
 
 actionHandler.gameOver = (a) ->
   window.gameOver = true
