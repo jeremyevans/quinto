@@ -8,11 +8,11 @@ maxPlayers = 10000
 maxGames = 10000
 
 F = {}
-wrappedFuncs = [[fs, 'readFile', 1], [fs, 'readdir', 1], [fs, 'mkdir', 2], [fs, 'writeFile', 2], [fs, 'symlink', 2], [path, 'exists', 1]]
+wrappedFuncs = [[fs, 'readFile'], [fs, 'readdir'], [fs, 'mkdir'], [fs, 'writeFile'], [fs, 'symlink']]
 for [m, f, num] in wrappedFuncs
-  F[f] = Future.wrap_wait(m[f], num)
+  F[f] = Future.wrap_wait(m[f])
 
-F.exists = Future.wrap_wait(((p, f) -> path.exists(p, (e) -> f(null, e))), 1)
+F.exists = Future.wrap_wait(((p, f) -> path.exists(p, (e) -> f(null, e))))
 
 objFromJsonWithProto = (proto, filename) ->
   data = F.readFile(filename)

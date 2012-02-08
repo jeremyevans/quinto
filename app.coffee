@@ -17,9 +17,9 @@ app.use(express.errorHandler({ showStack: true, dumpExceptions: true}))
 client_js = cs.compile(fs.readFileSync('client.coffee', 'ascii') + fs.readFileSync('quinto.coffee', 'ascii'))
 
 randomBytes = Future.wrap_wait(crypto.randomBytes, 1)
-genSalt = Future.wrap_wait(bcrypt.genSalt, 1)
-bcryptHash = Future.wrap_wait(bcrypt.hash, 2)
-bcryptCompare = Future.wrap_wait(bcrypt.compare, 2)
+genSalt = Future.wrap_wait(bcrypt.genSalt)
+bcryptHash = Future.wrap_wait(bcrypt.hash)
+bcryptCompare = Future.wrap_wait(bcrypt.compare)
 
 fiberWrapper = (f, req, res, next) ->
   Fiber(->
