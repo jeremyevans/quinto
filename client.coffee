@@ -55,7 +55,8 @@ handleAction = (a) ->
     alert("Unhandled action: #{a.action}")
 
 actionHandler.poll = (a) ->
-  setTimeout((-> request(a.poll)), 10000)
+  i = window.gameId
+  setTimeout((-> request(a.poll) if window.gameId == i), 10000)
 
 actionHandler.updateInfo = (a) ->
   gs = gameState()
