@@ -9,7 +9,7 @@ maxGames = 10000
 
 F = {}
 wrappedFuncs = [[fs, 'readFile'], [fs, 'readdir'], [fs, 'mkdir'], [fs, 'writeFile'], [fs, 'symlink']]
-for [m, f, num] in wrappedFuncs
+for [m, f] in wrappedFuncs
   F[f] = Future.wrap_wait(m[f])
 
 F.exists = Future.wrap_wait(((p, f) -> path.exists(p, (e) -> f(null, e))))
