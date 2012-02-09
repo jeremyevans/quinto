@@ -75,6 +75,7 @@ Q.Player.prototype.gameList = ->
 
 Q.Game.load = (id) ->
   game = blankObjWithProto(Q.Game)
+  game.init({})
   game.id = id
   game.players = game.loadPlayers()
   states = idsFromDir("#{ROOT}/games/#{id}/states")

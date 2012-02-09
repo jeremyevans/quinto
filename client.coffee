@@ -66,9 +66,9 @@ actionHandler.updateInfo = (a) ->
   tp = gs.translatePos
 
   board_html = "<table>"
-  for y in [0...GameState.boardY]
+  for y in [0...Game.boardY]
     board_html += "<tr>"
-    for x in [0...GameState.boardX]
+    for x in [0...Game.boardX]
       pos = tp(x, y)
       value = board[pos]
       board_html += "<td class='board_tile"

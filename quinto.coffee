@@ -3,60 +3,6 @@ class Player
     throw "player must have a name" unless @name
 
 class GameState
-  # Number of tiles each player has at one time
-  @rackSize: 5
-
-  # Maximum number of tiles in a row
-  @maxLength = 5
-
-  # What the sum of all consecutive tiles in a row or column must equal
-  # a multiple of
-  @sumEqual = 5
-
-  # Dimensions of board
-  @boardX: 17
-  @boardY: 17
-
-  @centerX: (@boardX-1)/2
-  @centerY: (@boardY-1)/2
-
-  # Default amount of each numbered tiles 
-  # 6 #1s, 6 #2s, 7 #3s, etc.
-  @tileCounts: [0, 6, 6, 7, 10, 6, 10, 14, 12, 12, 7]
-
-  # Default tile bag used for games
-  @tiles: (=>
-    t = []
-    for amount, tile in @tileCounts
-      for j in [0...amount]
-        t.push(tile)
-    t)()
-
-  # Returns number between [-0.5, 0.5]
-  @randomSorter: -> 0.5 - Math.random()
-
-  # Create an empty Quinto game
-  @empty: (game, opts) =>
-    if game.players.length < 2
-      throw("must have at least 2 players")
-    racks = ([] for p in game.players)
-    scores = (0 for p in game.players)
-    changes = {
-      game: game,
-      tiles: @tiles.slice().sort(@randomSorter),
-      board: {},
-      racks: racks,
-      scores:scores,
-      lastMove: null,
-      lastRuns: null,
-      passCount: 0,
-      moveCount: -1,
-      gameOver: false
-    }
-    for own k, v of opts
-      changes[k] = v
-    new @(null, changes)
-
   # Create a new GameState based on the previous GameState with the given changes
   constructor: (previous, changes) ->
     for own k, v of previous
@@ -90,7 +36,7 @@ class GameState
 
   # Fill the rack so that it has rackSize number of tiles
   fillRack: (rack) =>
-    rack.concat(@takeTiles(GameState.rackSize - rack.length))
+    rack.concat(@takeTiles(@game.rackSize - rack.length))
 
   # Remove i number of tiles from the tile bag
   takeTiles: (i) =>
@@ -181,8 +127,8 @@ class GameState
   translateCol: (x) -> String.fromCharCode(x+97)
 
   checkValidMoves: (b, ts) =>
-    mx = GameState.boardX
-    my = GameState.boardY
+    mx = @game.boardX
+    my = @game.boardY
     for [n, x, y] in ts
       if x >= mx or y >= my or x < 0 or y < 0
         throw("attempt to place tile outside of board: pos: #{@translatePos(x, y)}")
@@ -222,10 +168,12 @@ class GameState
         b[@translatePos(x, y)] = n
       i += 1
     if @empty()
-      unless b[@translatePos(GameState.centerX, GameState.centerY)]
-        throw("opening move must have tile placed in center square (#{@translatePos(GameState.centerX, GameState.centerY)})")
-      unless @sum(n for [n, x, y] in ts) % GameState.sumEqual == 0 
-        throw("opening move must sum to multiple of #{GameState.sumEqual}")
+      centerX = (@game.boardX-1)/2
+      centerY = (@game.boardY-1)/2
+      unless b[@translatePos(centerX, centerY)]
+        throw("opening move must have tile placed in center square (#{@translatePos(centerX, centerY)})")
+      unless @sum(n for [n, x, y] in ts) % @game.sumEqual == 0 
+        throw("opening move must sum to multiple of #{@game.sumEqual}")
 
   reorderTiles: (b, adj_ts, ts) ->
     return adj_ts if ts.length == 0
@@ -254,10 +202,10 @@ class GameState
       adj_ts.concat(ts)
 
   checkBoard: (b) ->
-    ms = GameState.sumEqual
-    ml = GameState.maxLength
-    mx = GameState.boardX
-    my = GameState.boardY
+    ms = @game.sumEqual
+    ml = @game.maxLength
+    mx = @game.boardX
+    my = @game.boardY
 
     y = 0
     while y < my
@@ -309,8 +257,58 @@ class GameState
     throw("attempt to use tile not in rack: tile: #{n}, rack: #{rack}")
 
 class Game
-  constructor: (@players, opts) ->
-    @states = [GameState.empty(@, opts)]
+  # Number of tiles each player has at one time
+  @rackSize: 5
+
+  # Maximum number of tiles in a row
+  @maxLength = 5
+
+  # What the sum of all consecutive tiles in a row or column must equal
+  # a multiple of
+  @sumEqual = 5
+
+  # Dimensions of board
+  @boardX: 17
+  @boardY: 17
+
+  # Default amount of each numbered tiles 
+  # 6 #1s, 6 #2s, 7 #3s, etc.
+  @tileCounts: [0, 6, 6, 7, 10, 6, 10, 14, 12, 12, 7]
+
+  # Default tile bag used for games
+  @tiles: (=>
+    t = []
+    for amount, tile in @tileCounts
+      for j in [0...amount]
+        t.push(tile)
+    t)()
+
+  # Returns number between [-0.5, 0.5]
+  @randomSorter: -> 0.5 - Math.random()
+
+  constructor: (@players, opts={}) ->
+    if @players.length < 2
+      throw("must have at least 2 players")
+    @init(opts)
+    opts.tiles or= Game.tiles.slice().sort(Game.randomSorter)
+    opts.racks = ([] for p in @players)
+    opts.scores = (0 for p in @players)
+    opts.lastMove = null
+    opts.lastRuns = null
+    opts.passCount = 0
+    opts.moveCount = -1
+    opts.gameOver = false
+    opts.board = {}
+    opts.game = @
+    @states = [new GameState(null, opts)]
+
+  init: (opts) ->
+    for k in ['rackSize', 'maxLength', 'sumEqual', 'boardX', 'boardY']
+      if v = opts[k]
+        @[k] = v
+      else
+        @[k] = Game[k]
+
   state: => @states[@states.length-1]
   move: (moves) => @states.push(@state().move(moves))
   pass: => @states.push(@state().pass())
