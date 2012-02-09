@@ -64,7 +64,7 @@ updateActions = (gs, player)->
   }]
   if gs.gameOver
     actions.unshift({action: "gameOver", winners: (p.name for p in gs.winners())})
-  else if pos != gs.toMove
+  else if pos != gs.toMove and !TEST_MODE
     actions.push(pollAction(gs))
   actions
 
