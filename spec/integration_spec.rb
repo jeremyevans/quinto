@@ -115,6 +115,7 @@ describe 'Quinto Site', :type=>:request, :js=>true do
     # Test dragging and dropping tiles
     join_game(:foo)
     page.find_by_id('rack4').drag_to(page.find_by_id('i8'))
+    page.find('#i8').text.should == '10'
     click_button 'Commit Move'
 
     # Test dragging and dropping same rack tile twice
