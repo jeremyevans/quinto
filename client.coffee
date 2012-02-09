@@ -119,7 +119,9 @@ actionHandler.gameOver = (a) ->
   $('#current_move').html("<h2>Game Over!</h2><h2>Winners: #{a.winners.join(', ')}</h2>")
 
 actionHandler.setPlayer = (a) ->
-  $('#login, #register').remove()
+  $('#login, #register').html('')
+  $('#logout').html("<h2><a href='#'>Logout</a></h2>")
+  $('#logout a').click(logout)
   window.playerId = a.player.id
   window.playerToken = a.player.token
   window.playerEmail = a.player.email
@@ -128,6 +130,9 @@ actionHandler.setPlayer = (a) ->
 
 initPlayer = ->
   window.gameOver = false
+  window.gameId = null
+  window.game = null
+  window.playerPosition = null
   $("#new_game").html("<a href='#'>Start New Game</a>")
   $("#new_game a").click ->
     $('#new_game').html("<form><input name='emails' placeholder='Emails of other players'/><input type='submit' value='Start New Game'/></form>")
@@ -142,7 +147,7 @@ actionHandler.newGame = (a) ->
   window.game = new Game(new Player(p) for p in a.players)
   window.playerPosition = a.position
   $('#new_game, #join_game').html('')
-  $("#leave_game").html("<a href='#'>Leave Game</a>")
+  $("#leave_game").html("<h2><a href='#'>Leave Game</a></h2>")
   $("#leave_game a").click(initPlayer)
 
 actionHandler.listGames = (a) ->
@@ -151,9 +156,22 @@ actionHandler.listGames = (a) ->
   $('#join_game').html("<form><select name='gameId'>#{options}</select><input type='submit' value='Join Game'/></form>")
   $("#join_game form").submit(-> request('/game/join', -> $('#join_game form').serializeObject()))
 
-startPage = (a) ->
-  $('#register a').click(register)
+logout = ->
+  window.playerId = null
+  window.playerToken = null
+  window.playerEmail = null
+  window.playerName = null
+  window.gameId = null
+  $('#logout').html("")
+  $('#leave_game').html("")
+  $('#login').html("<a href='#'>Login</a>")
+  $('#register').html("<a href='#'>Register</a>")
+  $('#board, #rack, #new_game, #join_game, #to_move, #scores, #current_move').html('')
   $('#login a').click(login)
+  $('#register a').click(register)
+
+startPage = (a) ->
+  logout()
   $('#rules a').click(showRules)
   $(document).on('click', '.board_tile', '.board_tile', selectTile)
   $(document).on('click', '.rack_tile', '.rack_tile', selectTile)

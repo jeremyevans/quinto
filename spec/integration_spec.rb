@@ -29,7 +29,7 @@ describe 'Quinto Site', :type=>:request, :js=>true do
   end
 
   def login(email, pass)
-    home
+    click_link 'Logout'
     click_link "Login"
     fill_in('email', :with=>email)
     fill_in('password', :with=>pass)
