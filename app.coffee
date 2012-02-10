@@ -4,7 +4,10 @@ Q = require "./quinto"
 fs = require "fs"
 Future = require './future_wrapper'
 crypto = require 'crypto'
-require './persist_json'
+if process.env.DATABASE_URL
+  require './persist_pg'
+else
+  require './persist_json'
 bcrypt = require 'bcrypt'
 TEST_MODE = process.env.QUINTO_TEST == '1'
 
@@ -22,12 +25,11 @@ bcryptHash = Future.wrap_wait(bcrypt.hash)
 bcryptCompare = Future.wrap_wait(bcrypt.compare)
 
 fiberWrapper = (f, req, res, next) ->
-  Fiber(->
+  Fiber.run ->
     try
       f(req, res)
     catch err
       next(new Error(err))
-  ).run()
 get = (path, f) ->
   app.get path, (req, res, next) ->
     fiberWrapper(f, req, res, next)
@@ -38,10 +40,6 @@ post = (path, f) ->
 enext = (next) ->
   (err) ->
     next(new Error(err))
-
-#app.error((err, req, res) ->
-#  res.send(err, 500)
-#)
 
 parseInt10 = (v) -> parseInt(v, 10)
 

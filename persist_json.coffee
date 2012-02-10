@@ -99,7 +99,7 @@ Q.Game.nextId = ->
       null
   throw 'too many games in database'
 
-Q.Game.prototype.persist = (e, f) ->
+Q.Game.prototype.persist = ->
   return if @id
   @id = Q.Game.nextId()
   F.mkdir "#{ROOT}/games/#{@id}/players", 0755
@@ -111,7 +111,7 @@ Q.Game.prototype.persist = (e, f) ->
 Q.GameState.load = (gameId, moveCount) =>
   objFromJsonWithProto(Q.GameState, "#{ROOT}/games/#{gameId}/states/#{moveCount}")
 
-Q.GameState.prototype.persist = () ->
+Q.GameState.prototype.persist = ->
   json_file = "#{ROOT}/games/#{@game.id}/states/#{@moveCount}"
   unless F.exists(json_file)
     obj = {
