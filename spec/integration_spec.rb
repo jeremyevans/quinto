@@ -95,7 +95,14 @@ describe 'Quinto Site', :type=>:request, :js=>true do
     h.should =~ /Join Game/
     h.should =~ /Thanks for logging in, Bar/
 
+    # Test starting game with same email fails
+    click_link 'Start New Game'
+    fill_in('emails', :with=>'bar@foo.com:[3,4,4,8,10,2,2,3,4,10,7,9,5,8,6,8,8,7,2,4,6,1,7,2,1,7,9,9,7,6,4,3,5,5,10,8,4,8,8,9,6,1,5,1,9,3,10,7,8,8,4,7,6,7,4,8,1,4,7,5,10,7,3,9,10,7,3,6,2,7,10,9,4,6,5,6,3,9,8,9,8,9,7,6,2,9,1,7,9,6]')
+    click_button 'Start New Game'
+    page.html.should =~ /cannot have same player in two separate positions/
+
     # Test starting game right after registering
+    login_bar
     click_link 'Start New Game'
     fill_in('emails', :with=>'foo@bar.com:[3,4,4,8,10,2,2,3,4,10,7,9,5,8,6,8,8,7,2,4,6,1,7,2,1,7,9,9,7,6,4,3,5,5,10,8,4,8,8,9,6,1,5,1,9,3,10,7,8,8,4,7,6,7,4,8,1,4,7,5,10,7,3,9,10,7,3,6,2,7,10,9,4,6,5,6,3,9,8,9,8,9,7,6,2,9,1,7,9,6]')
     click_button 'Start New Game'

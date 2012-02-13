@@ -140,6 +140,13 @@ post '/game/new', (req, res) ->
 
   players = lookupPlayers(emails.split(new RegExp(' *, *')))
   players.unshift(starter)
+  
+  check_players = {}
+  for p in players
+    if check_players[p.email]
+      throw "cannot have same player in two separate positions"
+    check_players[p.email] = p
+
   game = if TEST_MODE and tiles?
     new Q.Game(players, {tiles: tiles})
   else
