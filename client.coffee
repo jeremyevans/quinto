@@ -58,6 +58,9 @@ actionHandler.poll = (a) ->
   i = window.gameId
   setTimeout((-> request(a.poll) if window.gameId == i), 10000)
 
+myTurn = ->
+  window.playerPosition == gameState().toMove
+
 actionHandler.updateInfo = (a) ->
   gs = gameState()
   oldBoard = gs.board
@@ -87,10 +90,10 @@ actionHandler.updateInfo = (a) ->
 
   $('#scores').html("<h2>Scores:<h2><table>#{("<tr><td>#{if i == window.playerPosition then 'You' else escape(p)}:</td><td>#{gs.scores[i]}</td></tr>" for p, i in gs.players).join('')}</table>")
   unless window.gameOver
-    $('#to_move').html(if gs.toMove == window.playerPosition then 'Your Turn!' else "#{gs.players[gs.toMove]}'s Turn")
+    $('#to_move').html(if myTurn() then 'Your Turn!' else "#{gs.players[gs.toMove]}'s Turn")
     $('#rack').html("<div id='tile_holder'>#{("<div class='rack_tile' id='rack#{i}'>#{x}</div>" for x, i in gs.rack).join('')}</div><h2>Your Tile Rack</h2>")
     $('#current_move').html('')
-    unless window.playerPosition != gs.toMove
+    if myTurn()
       $('.rack_tile').draggable({cursor: 'move', helper: 'clone'})
       $('.board_tile').droppable(drop: droppedTile)
       checkMove()
@@ -234,6 +237,7 @@ register = ->
   $('#register_form').submit(post("/player/register", -> $('#register_form').serialize()))
 
 selectTile = (e) ->
+  return unless myTurn()
   exist = $(e.data)
   t = $(e.target)
   if t.hasClass('current')
