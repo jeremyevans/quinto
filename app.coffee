@@ -43,8 +43,8 @@ enext = (next) ->
 
 parseInt10 = (v) -> parseInt(v, 10)
 
-pollAction = (gs) ->
-  {action: 'poll', poll: "/game/check/#{gs.moveCount}"}
+pollAction = (moveCount) ->
+  {action: 'poll', poll: "/game/check/#{moveCount}"}
 
 updateActions = (gs, player)->
   pos = playerPosition(gs.game, player)
@@ -63,7 +63,7 @@ updateActions = (gs, player)->
   if gs.gameOver
     actions.unshift({action: "gameOver", winners: (p.name for p in gs.winners())})
   else if pos != gs.toMove and !TEST_MODE
-    actions.push(pollAction(gs))
+    actions.push(pollAction(gs.moveCount))
   actions
 
 playerPosition = (game, player) ->
@@ -107,12 +107,11 @@ app.get '/app.js', (req, res, next) ->
   res.send(client_js, {'Content-Type': 'text/javascript'})
 
 get '/game/check/:moveCount', (req, res) ->
-  game = loadGame(req)
-  gs = game.state()
-  if gs.moveCount == parseInt10(req.param('moveCount'))
-    res.json([pollAction(gs)])
+  moveCount = parseInt10(req.param('moveCount'))
+  if Q.Game.gameChanged(parseInt10(req.param('gameId')), moveCount)
+    res.json(updateActions(loadGame(req).state(), loadPlayer(req)))
   else
-    res.json(updateActions(gs, loadPlayer(req)))
+    res.json([pollAction(moveCount)])
 
 post '/player/register', (req, res) ->
   token = randomBytes(16).toString('base64')

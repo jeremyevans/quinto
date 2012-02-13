@@ -84,6 +84,9 @@ Q.Game.load = (id) ->
   game.states = [state]
   game
 
+Q.Game.gameChanged = (gameId, moveCount) ->
+  F.exists("#{ROOT}/games/#{gameId}/states/#{moveCount}") && !F.exists("#{ROOT}/games/#{gameId}/states/#{moveCount+1}")
+
 Q.Game.prototype.loadPlayers = ->
   for i in idsFromDir("#{ROOT}/games/#{@id}/players")
     objFromJsonWithProto(Q.Player, "#{ROOT}/games/#{@id}/players/#{i}")

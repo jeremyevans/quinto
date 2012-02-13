@@ -78,7 +78,7 @@ Q.Player.prototype.gameList = ->
         GROUP BY id
         ORDER BY id DESC
         '''
-  F.query({text: sql, values: [@id]}).rows
+  F.query({text: sql, name: 'gameList', values: [@id]}).rows
 
 Q.Game.load = (id) ->
   game = objFromRow(Q.Game, first('games', {id: id}))
@@ -93,11 +93,14 @@ Q.Game.load = (id) ->
         ) AS g ON (players.id = g.player_ids[position])
         ORDER BY g.position
         '''
-  game.players = for row in F.query({text: sql, values: [id]}).rows
+  game.players = for row in F.query({text: sql, name: 'gameLoad', values: [id]}).rows
     objFromRow(Q.Player, row)
   game.states = [Q.GameState.load(id, "(SELECT max(move_count) AS m FROM game_states WHERE game_id = $1)")]
   game.state().game = game
   game
+
+Q.Game.gameChanged = (gameId, moveCount) ->
+  F.query({text: "(SELECT max(move_count) AS m FROM game_states WHERE game_id = $1)", name: 'gameChanged', values: [gameId]}).rows[0].m > moveCount
 
 Q.Game.prototype.persist = ->
   @id = insert('games', {player_ids:(p.id for p in @players)}).id
@@ -122,7 +125,7 @@ Q.GameState.load = (gameId, moveCount) =>
         FROM game_states
         WHERE game_id = $1 and move_count = #{moveCount}
         """
-  state = objFromRow(Q.GameState, F.query({text: sql, values: vals}).rows[0])
+  state = objFromRow(Q.GameState, F.query({text: sql, name: (if vals.length == 1 then 'lastStateLoad' else 'stateLoad'), values: vals}).rows[0])
   state.board = JSON.parse(state.board)
   state.racks = ((t for t in rack when t > 0) for rack in state.racks)
   state
