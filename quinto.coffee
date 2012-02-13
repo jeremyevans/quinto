@@ -1,6 +1,6 @@
 class Player
-  constructor: (@name, @email, @token) ->
-    throw "player must have a name" unless @name
+  constructor: (@email, @token) ->
+    throw "player must have an email" unless @email
 
 class GameState
   # Create a new GameState based on the previous GameState with the given changes

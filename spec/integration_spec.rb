@@ -74,26 +74,24 @@ describe 'Quinto Site', :type=>:request, :js=>true do
     # Registering User #1
     home
     click_link "Register"
-    fill_in('name', :with=>'Foo')
     fill_in('email', :with=>'foo@bar.com')
     fill_in('password', :with=>'foobar')
     click_button 'Register'
     h = page.html
     h.should =~ /Start New Game/
     h.should =~ /Join Game/
-    h.should =~ /Thanks for logging in, Foo/
+    h.should =~ /Thanks for logging in, foo@bar.com/
 
     # Registering User #2
     home
     click_link "Register"
-    fill_in('name', :with=>'Bar')
     fill_in('email', :with=>'bar@foo.com')
     fill_in('password', :with=>'barfoo')
     click_button 'Register'
     h = page.html
     h.should =~ /Start New Game/
     h.should =~ /Join Game/
-    h.should =~ /Thanks for logging in, Bar/
+    h.should =~ /Thanks for logging in, bar@foo.com/
 
     # Test starting game with same email fails
     click_link 'Start New Game'
@@ -110,14 +108,14 @@ describe 'Quinto Site', :type=>:request, :js=>true do
 
     # Test passing
     click_button 'Pass'
-    page.html.should =~ /Foo's Turn/
+    page.html.should =~ /foo@bar.com's Turn/
 
     # Test leaving and reentering game
     click_link 'Leave Game'
     click_link 'Join Game'
     wait
     click_button 'Join Game'
-    page.html.should =~ /Foo's Turn/
+    page.html.should =~ /foo@bar.com's Turn/
 
     # Test dragging and dropping tiles
     join_game(:foo)
@@ -247,7 +245,7 @@ describe 'Quinto Site', :type=>:request, :js=>true do
 
     # Logging in and joining game
     join_game(:bar)
-    page.html.should =~ /Foo's Turn/
+    page.html.should =~ /foo@bar.com's Turn/
 
     # Make moves
     join_game(:foo)
@@ -518,6 +516,6 @@ describe 'Quinto Site', :type=>:request, :js=>true do
     click("##{page.evaluate_script("$('.rack_tile:not(.move):contains(7)').attr('id')")}")
     click_button('Commit Move')
 
-    page.html.should =~ /Winners: Foo/
+    page.html.should =~ /Winners: foo@bar.com/
   end
 end

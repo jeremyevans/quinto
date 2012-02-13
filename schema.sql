@@ -1,6 +1,5 @@
 CREATE TABLE players (
   id SERIAL PRIMARY KEY
- ,name TEXT NOT NULL
  ,email TEXT NOT NULL
  ,hash TEXT NOT NULL
  ,token TEXT NOT NULL

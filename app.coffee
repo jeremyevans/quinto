@@ -53,7 +53,7 @@ updateActions = (gs, player)->
     state: {
       board: gs.board
       rack: gs.racks[pos]
-      players: (p.name for p in gs.game.players)
+      players: (p.email for p in gs.game.players)
       scores: gs.scores
       toMove: gs.toMove
       passCount: gs.passCount
@@ -61,7 +61,7 @@ updateActions = (gs, player)->
     }
   }]
   if gs.gameOver
-    actions.unshift({action: "gameOver", winners: (p.name for p in gs.winners())})
+    actions.unshift({action: "gameOver", winners: (p.email for p in gs.winners())})
   else if pos != gs.toMove and !TEST_MODE
     actions.push(pollAction(gs.moveCount))
   actions
@@ -73,7 +73,7 @@ playerPosition = (game, player) ->
 newGame = (game, player, res) ->
   pos = playerPosition(game, player)
   actions = updateActions(game.state(), player)
-  actions.unshift({action: 'newGame', players: (p.name for p in game.players), position: pos, gameId: game.id})
+  actions.unshift({action: 'newGame', players: (p.email for p in game.players), position: pos, gameId: game.id})
   res.json(actions)
 
 loadPlayer = (req) ->
@@ -115,7 +115,7 @@ get '/game/check/:moveCount', (req, res) ->
 
 post '/player/register', (req, res) ->
   token = randomBytes(16).toString('base64')
-  player = new Q.Player(req.param('name'), req.param('email'), token)
+  player = new Q.Player(req.param('email'), token)
   hash = bcryptHash(req.param('password'), genSalt(10))
   player.persist(hash)
   res.json([action: 'setPlayer', player: player])

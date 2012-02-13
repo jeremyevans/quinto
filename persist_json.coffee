@@ -64,7 +64,7 @@ Q.Player.prototype.persist = (hash) ->
     throw "email already exists in database: #{@email}"
   @id = Q.Player.nextId()
   F.mkdir "#{ROOT}/players/#{@id}/games", 0755
-  obj = {id: @id, name: @name, email: @email, token: @token, hash: hash}
+  obj = {id: @id, email: @email, token: @token, hash: hash}
   F.writeFile "#{ROOT}/players/#{@id}/player", JSON.stringify(obj)
   F.symlink "../players/#{@id}/player", "#{ROOT}/emails/#{normalizeEmail(@email)}"
 

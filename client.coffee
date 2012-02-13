@@ -134,7 +134,6 @@ actionHandler.setPlayer = (a) ->
   window.playerId = a.player.id
   window.playerToken = a.player.token
   window.playerEmail = a.player.email
-  window.playerName = a.player.name
   initPlayer()
 
 initPlayer = ->
@@ -148,7 +147,7 @@ initPlayer = ->
     $('#new_game form').submit(post('/game/new', -> $('#new_game form').serializeObject()))
   $("#join_game").html("<a href='#'>Join Game</a>")
   $("#join_game a").click(-> request('/game/list'))
-  $("#current_move").html("Thanks for logging in, #{escape(window.playerName)}")
+  $("#current_move").html("Thanks for logging in, #{escape(window.playerEmail)}")
   $('#leave_game, #board, #rack, #scores').html('')
   
 actionHandler.newGame = (a) ->
@@ -169,7 +168,6 @@ logout = ->
   window.playerId = null
   window.playerToken = null
   window.playerEmail = null
-  window.playerName = null
   window.gameId = null
   $('#logout').html("")
   $('#leave_game').html("")
@@ -238,7 +236,7 @@ login = ->
   $('#login_form').submit(post("/player/login", -> $('#login_form').serialize()))
 
 register = ->
-  $('#register').html("<form id='register_form' action='#'><input name='name' placeholder='Name'/><input name='email' placeholder='Email'/><input type='password' name='password' placeholder='Password'/><input type='submit' value='Register'/></form>")
+  $('#register').html("<form id='register_form' action='#'><input name='email' placeholder='Email'/><input type='password' name='password' placeholder='Password'/><input type='submit' value='Register'/></form>")
   $('#register_form').submit(post("/player/register", -> $('#register_form').serialize()))
 
 selectTile = (e) ->

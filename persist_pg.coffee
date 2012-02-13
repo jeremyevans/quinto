@@ -60,7 +60,7 @@ Q.Player.lookup = (email) ->
     objFromRow(Q.Player, player)
 
 Q.Player.prototype.persist = (hash) ->
-  @id = insert('players', {name: @name, email: normalizeEmail(@email), token: @token, hash: hash}).id
+  @id = insert('players', {email: normalizeEmail(@email), token: @token, hash: hash}).id
 
 Q.Player.prototype.gameList = ->
   sql = '''
@@ -84,7 +84,7 @@ Q.Game.load = (id) ->
   game = objFromRow(Q.Game, first('games', {id: id}))
   game.init({})
   sql = '''
-        SELECT players.id, players.name, players.email, players.token
+        SELECT players.id, players.email, players.token
         FROM players
         JOIN (
           SELECT games.id, generate_subscripts(player_ids, 1) AS position, player_ids

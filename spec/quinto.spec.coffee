@@ -5,19 +5,18 @@ GameState = Q.GameState
 
 describe 'Player', ->
   it 'should have a working constructor', ->
-    p = new Player 'foo', 'bar@baz.com', 'blah'
-    expect(p.name).toEqual 'foo'
+    p = new Player 'bar@baz.com', 'blah'
     expect(p.email).toEqual 'bar@baz.com'
     expect(p.token).toEqual 'blah'
 
 describe 'Game', ->
   beforeEach ->
-    @g = new Game [new Player('foo', 'bar@baz.com', 'blah'), new Player('foo2', 'bar2@baz.com', 'blah2')]
+    @g = new Game [new Player('bar@baz.com', 'blah'), new Player('bar2@baz.com', 'blah2')]
     @s = @g.state()
 
   it 'should require at least 2 players', ->
     expect(-> new Game []).toThrow()
-    expect(-> new Game [new Player 'foo', 'bar@baz.com', 'blah']).toThrow()
+    expect(-> new Game [new Player 'bar@baz.com', 'blah']).toThrow()
 
   it 'should have an initial state', ->
     expect(@s.tiles.length).toEqual(80)
@@ -41,14 +40,14 @@ describe 'Game', ->
 
 describe 'GameState', ->
   beforeEach ->
-    @s = (new Game [new Player('foo', 'bar@baz.com', 'blah'), new Player('foo2', 'bar2@baz.com', 'blah2')]).state()
+    @s = (new Game [new Player('bar@baz.com', 'blah'), new Player('bar2@baz.com', 'blah2')]).state()
     @s.racks = [[5, 6, 4, 3, 7], [5, 8, 2, 9, 1]]
 
   it 'should have a reasonable initial state', ->
     expect(@s.tiles.length).toEqual(80)
     expect(@s.racks.length).toEqual(2)
     expect(r.length).toEqual(5) for r in @s.racks
-    expect(@s.game.players[0].name).toEqual('foo')
+    expect(@s.game.players[0].email).toEqual('bar@baz.com')
     expect(@s.board).toEqual({})
     expect(@s.scores).toEqual([0, 0])
     expect(@s.lastMove).toEqual(null)
@@ -62,7 +61,7 @@ describe 'GameState', ->
     expect(s.tiles.length).toEqual(80)
     expect(s.racks.length).toEqual(2)
     expect(r.length).toEqual(5) for r in s.racks
-    expect(s.game.players[0].name).toEqual('foo')
+    expect(s.game.players[0].email).toEqual('bar@baz.com')
     expect(s.board).toEqual({})
     expect(s.scores).toEqual([0, 0])
     expect(s.lastMove).toEqual(null)
@@ -76,7 +75,7 @@ describe 'GameState', ->
     expect(s.tiles.length).toEqual(79)
     expect(s.racks.length).toEqual(2)
     expect(r.length).toEqual(5) for r in s.racks
-    expect(s.game.players[0].name).toEqual('foo')
+    expect(s.game.players[0].email).toEqual('bar@baz.com')
     expect(s.board).toEqual({i8: 5})
     expect(s.scores).toEqual([5, 0])
     expect(s.lastMove).toEqual('5i8')
@@ -95,10 +94,10 @@ describe 'GameState', ->
     expect(s.scores).toEqual([25, -25])
 
   it 'should report winners correctly', ->
-    expect(p.name for p in @s.pass().pass().winners()).toEqual(['foo', 'foo2'])
+    expect(p.email for p in @s.pass().pass().winners()).toEqual(['bar@baz.com', 'bar2@baz.com'])
     @s.racks[0] = [5]
     @s.tiles = []
-    expect(p.name for p in @s.move('5i8').winners()).toEqual(['foo'])
+    expect(p.email for p in @s.move('5i8').winners()).toEqual(['bar@baz.com'])
 
   it 'should report if the board is empty', ->
     expect(@s.empty()).toEqual(true)
