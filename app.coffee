@@ -53,7 +53,6 @@ updateActions = (gs, player)->
     state: {
       board: gs.board
       rack: gs.racks[pos]
-      players: (p.email for p in gs.game.players)
       scores: gs.scores
       toMove: gs.toMove
       passCount: gs.passCount

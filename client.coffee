@@ -93,9 +93,9 @@ actionHandler.updateInfo = (a) ->
   board_html += "</table>"
   $('#board').html(board_html)
 
-  $('#scores').html("<h2>Scores:<h2><table>#{("<tr><td>#{if i == window.playerPosition then 'You' else escape(p)}:</td><td>#{gs.scores[i]}</td></tr>" for p, i in gs.players).join('')}</table>")
+  $('#scores').html("<h2>Scores:<h2><table>#{("<tr><td>#{if i == window.playerPosition then 'You' else escape(p.email)}:</td><td>#{gs.scores[i]}</td></tr>" for p, i in window.game.players).join('')}</table>")
   unless window.gameOver
-    $('#to_move').html(if myTurn() then 'Your Turn!' else "#{gs.players[gs.toMove]}'s Turn")
+    $('#to_move').html(if myTurn() then 'Your Turn!' else "#{window.game.players[gs.toMove].email}'s Turn")
     $('#rack').html("<div id='tile_holder'>#{("<div class='rack_tile' id='rack#{i}'>#{x}</div>" for x, i in gs.rack).join('')}</div><h2>Your Tile Rack</h2>")
     $('#current_move').html('')
     if myTurn()
@@ -297,7 +297,7 @@ checkMove = ->
     catch error
       $("#current_move").html("<h2>#{error}</h2>")
   else
-    $('#current_move').html("<button type='button' id='pass'>Pass#{if gs.passCount == gs.players.length - 1 then ' and End Game' else ''}</button>")
+    $('#current_move').html("<button type='button' id='pass'>Pass#{if gs.passCount == window.game.players.length - 1 then ' and End Game' else ''}</button>")
     $('#pass').click(sendPass)
 
 $(document).ready -> startPage()
