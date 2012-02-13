@@ -32,14 +32,19 @@ addToken = (obj) ->
 handleError = (e) ->
   e.error((data) -> $('#current_move').html("<h2>Server Error: #{data.responseText}</h2>"))
 
-request = (path, f) ->
-  handleError($.getJSON(path, addToken(if f then f() else {}), handleActions))
+request = (path, f=null, opts={}) ->
+  opts.url = path
+  opts.dataType = 'json'
+  opts.cache = false
+  opts.success = handleActions
+  opts.data = addToken(if f then f() else {})
+  handleError($.ajax(opts))
   false
 
-post = (path, f) ->
+post = (path, f=null, opts={}) ->
  (e) ->
   e.preventDefault() if e
-  handleError($.post(path, addToken(if f then f() else {}), handleActions, 'json'))
+  request(path, f, {type: 'POST'})
     
 gameState = -> window.game.state()
 
