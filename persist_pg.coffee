@@ -130,21 +130,19 @@ Q.GameState.load = (gameId, moveCount) =>
         """
   state = objFromRow(Q.GameState, F.query({text: sql, name: (if vals.length == 1 then 'lastStateLoad' else 'stateLoad'), values: vals}).rows[0])
   state.board = JSON.parse(state.board)
-  state.racks = ((t for t in rack when t > 0) for rack in state.racks)
+  state.racks = JSON.parse(state.racks)
+  state.scores = JSON.parse(state.scores)
+  state.tiles = JSON.parse(state.tiles)
   state
 
 Q.GameState.prototype.persist = ->
-  racks = (rack.slice() for rack in @racks)
-  for rack in racks
-    for i in [0...(@game.rackSize - rack.length)] by 1
-      rack.push(0)
   obj = {
     game_id: @game.id
     move_count: @moveCount
     to_move: @toMove
-    tiles: @tiles
-    scores: @scores
-    racks: racks
+    tiles: JSON.stringify(@tiles)
+    scores: JSON.stringify(@scores)
+    racks: JSON.stringify(@racks)
     board: JSON.stringify(@board)
     last_move: @lastMove
     pass_count: @passCount
