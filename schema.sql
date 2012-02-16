@@ -4,12 +4,19 @@ CREATE TABLE players (
  ,hash TEXT NOT NULL
  ,token TEXT NOT NULL
 );
-CREATE UNIQUE INDEX players_email_idx on players(email);
+CREATE UNIQUE INDEX players_email_idx ON players(email);
 
 CREATE TABLE games (
   id SERIAL PRIMARY KEY
- ,player_ids INTEGER[] NOT NULL
 );
+
+CREATE TABLE game_players (
+  game_id INTEGER REFERENCES games
+ ,player_id INTEGER REFERENCES players
+ ,position INTEGER NOT NULL
+ ,PRIMARY KEY (game_id, player_id)
+);
+CREATE UNIQUE INDEX game_players_game_id_position_idx ON game_players(game_id, position);
 
 CREATE TABLE game_states (
   game_id INTEGER REFERENCES games 

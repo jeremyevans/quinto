@@ -64,22 +64,25 @@ Q.Player.prototype.persist = (hash) ->
 
 Q.Player.prototype.gameList = ->
   sql = '''
-        SELECT id, array_agg(email) AS players
-        FROM (
-          SELECT g.id, players.email 
-          FROM players
-          JOIN (
-            SELECT games.id, generate_subscripts(player_ids, 1) AS position, player_ids
-            FROM games
-            WHERE $1 = ANY(games.player_ids) AND
-              id NOT IN (SELECT game_id FROM game_states WHERE game_over = TRUE)
-          ) AS g ON (players.id = g.player_ids[position])
-          ORDER BY g.id DESC, g.position
-        ) AS p
-        GROUP BY id
-        ORDER BY id DESC
+       SELECT g.game_id AS id, players.email 
+       FROM players
+       JOIN (
+         SELECT *
+         FROM game_players
+         WHERE game_id IN (SELECT game_id FROM game_players WHERE player_id = $1)
+           AND game_id NOT IN (SELECT game_id FROM game_states WHERE game_over = TRUE)
+       ) AS g ON (players.id = g.player_id)
+       ORDER BY g.game_id DESC, g.position
         '''
-  F.query({text: sql, name: 'gameList', values: [@id]}).rows
+  games = {}
+  game_ids = []
+  for row in F.query({text: sql, name: 'gameList', values: [@id]}).rows
+    id = "#{row.id}"
+    unless players = games[id]
+      game_ids.push(id)
+      players = games[id] = []
+    players.push(row.email)
+  {id: 0+i, players: games[i]} for i in game_ids
 
 Q.Game.load = (id) ->
   game = objFromRow(Q.Game, first('games', {id: id}))
@@ -87,12 +90,9 @@ Q.Game.load = (id) ->
   sql = '''
         SELECT players.id, players.email, players.token
         FROM players
-        JOIN (
-          SELECT games.id, generate_subscripts(player_ids, 1) AS position, player_ids
-          FROM games
-          WHERE id = $1
-        ) AS g ON (players.id = g.player_ids[position])
-        ORDER BY g.position
+        JOIN game_players ON (players.id = game_players.player_id)
+        WHERE game_players.game_id = $1
+        ORDER BY game_players.position
         '''
   game.players = for row in F.query({text: sql, name: 'gameLoad', values: [id]}).rows
     objFromRow(Q.Player, row)
@@ -104,7 +104,9 @@ Q.Game.gameChanged = (gameId, moveCount) ->
   F.query({text: "(SELECT max(move_count) AS m FROM game_states WHERE game_id = $1)", name: 'gameChanged', values: [gameId]}).rows[0].m > moveCount
 
 Q.Game.prototype.persist = ->
-  @id = insert('games', {player_ids:(p.id for p in @players)}).id
+  @id = F.query({text: "INSERT INTO games DEFAULT VALUES RETURNING *", name: 'insertGame'}).rows[0].id
+  for p, i in @players
+    insert('game_players', {game_id: @id, player_id: p.id, position: i})
 
 Q.GameState.load = (gameId, moveCount) =>
   vals = [gameId]
