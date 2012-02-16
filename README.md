@@ -11,7 +11,7 @@ nodejs first.  After installing node, run:
 
     npm install
 
-That will install the other dependencies (coffeescript, express,
+That will install the other dependencies (pg, coffeescript, express,
 bcrypt, and fibers).  The default persistence backend uses JSON files
 in the filesystem, and you can create the necessary directory
 structure via:
@@ -20,7 +20,6 @@ structure via:
 
 There is also a PostgreSQL backend, which you can use via:
 
-    npm install pg
     create_db quinto
     psql < schema.sql quinto
 
