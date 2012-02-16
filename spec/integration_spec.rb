@@ -6,7 +6,7 @@ require 'capybara/rspec'
 require 'headless'
 
 Capybara.javascript_driver = :webkit
-SLEEP_TIME = ENV['SLEEP_TIME'] ? ENV['SLEEP_TIME'].to_f : 0.2
+SLEEP_TIME = ENV['SLEEP_TIME'] ? ENV['SLEEP_TIME'].to_f : 0.3
 
 RSpec.configure do |c|
   c.before do
