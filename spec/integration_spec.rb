@@ -11,7 +11,7 @@ SLEEP_TIME = ENV['SLEEP_TIME'] ? ENV['SLEEP_TIME'].to_f : 0.3
 RSpec.configure do |c|
   c.before do
     Capybara.default_selector = :css
-    Capybara.server_port = ENV['QUINTO_PORT'].to_i
+    Capybara.server_port = ENV['PORT'].to_i
   end
 
   c.around do |e|

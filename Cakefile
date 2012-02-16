@@ -15,7 +15,7 @@ spec = (f) ->
   system 'jasmine-node', ['--coffee', 'spec'], f
 
 integration = (f) ->
-  process.env.QUINTO_PORT or= '3001'
+  process.env.PORT or= '3001'
   process.env.QUINTO_TEST or= '1'
   quinto = spawn('node', ['server.js'])
   system 'rspec', ['spec/integration_spec.rb'], (code) ->

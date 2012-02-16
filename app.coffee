@@ -162,7 +162,7 @@ get '/game/join', (req, res) ->
 post '/game/move', moveOrPass((gs, req) -> gs.game.move(req.param('move')))
 post '/game/pass', moveOrPass((gs, req) -> gs.game.pass())
 
-port = process.env.QUINTO_PORT or 3000
+port = process.env.PORT or 3000
 app.listen port
 console.log "Listening on #{port}..."
 

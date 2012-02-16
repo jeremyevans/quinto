@@ -43,7 +43,7 @@ or:
 
     coffee app.coffee
 
-By default, the server runs on port 3000, you can set the QUINTO_PORT
+By default, the server runs on port 3000, you can set the PORT
 environment variable to override it.
 
 ## Running the command line client
