@@ -71,7 +71,8 @@ Q.Player.prototype.gameList = ->
           JOIN (
             SELECT games.id, generate_subscripts(player_ids, 1) AS position, player_ids
             FROM games
-            WHERE $1 = ANY(games.player_ids)
+            WHERE $1 = ANY(games.player_ids) AND
+              id NOT IN (SELECT game_id FROM game_states WHERE game_over = TRUE)
           ) AS g ON (players.id = g.player_ids[position])
           ORDER BY g.id DESC, g.position
         ) AS p

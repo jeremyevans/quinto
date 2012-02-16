@@ -8,7 +8,7 @@ maxPlayers = 10000
 maxGames = 10000
 
 F = {}
-wrappedFuncs = [[fs, 'readFile'], [fs, 'readdir'], [fs, 'mkdir'], [fs, 'writeFile'], [fs, 'symlink']]
+wrappedFuncs = [[fs, 'readFile'], [fs, 'readdir'], [fs, 'mkdir'], [fs, 'writeFile'], [fs, 'symlink'], [fs, 'unlink'], [fs, 'readlink']]
 for [m, f] in wrappedFuncs
   F[f] = Future.wrap_wait(m[f])
 
@@ -130,3 +130,7 @@ Q.GameState.prototype.persist = ->
       scores: @scores
     }
     F.writeFile(json_file, JSON.stringify(obj))
+    if @gameOver
+      for i in idsFromDir("#{ROOT}/games/#{@game.id}/players")
+        playerId = path.basename(path.dirname(F.readlink("#{ROOT}/games/#{@game.id}/players/#{i}")))
+        F.unlink("#{ROOT}/players/#{playerId}/games/#{@game.id}")

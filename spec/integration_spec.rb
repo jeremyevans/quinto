@@ -517,5 +517,11 @@ describe 'Quinto Site', :type=>:request, :js=>true do
     click_button('Commit Move')
 
     page.html.should =~ /Winners: foo@bar.com/
+
+    click_link 'Leave Game'
+    click_link 'Join Game'
+    wait
+    page.html.should =~ /1 - foo@bar.com/
+    page.html.should_not =~ /2 - foo@bar.com/
   end
 end
