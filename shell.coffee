@@ -71,6 +71,9 @@ if require.main == module
 
     question = Future.wrap_wait((q, f) -> Rl.question(q, (n) -> f(null, n)))
 
+    startLoading = -> process.stdout.write("\rLoading...")
+    doneLoading =  -> process.stdout.write("\r          \r")
+
     jsonRequest = (path, opts={}) ->
       fiber = Fiber.current
 
@@ -88,6 +91,7 @@ if require.main == module
         opts.headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
       else if opts.data
         opts.path += "?#{QS.stringify(opts.data)}"
+      startLoading()
       req = HTTP.request opts, (res) ->
         fiber.run(res)
       if opts.method == 'POST' && opts.data
@@ -98,6 +102,7 @@ if require.main == module
       res.on('data', (chunk) -> data.push(chunk))
       res.on('end', -> fiber.run())
       yield()
+      doneLoading()
       if res.statusCode == 200
         JSON.parse(data.join(''))
       else

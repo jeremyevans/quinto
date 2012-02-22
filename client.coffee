@@ -30,7 +30,9 @@ addToken = (obj) ->
   obj
 
 handleError = (e) ->
-  e.error((data) -> $('#current_move').html("<h2>Server Error: #{data.responseText}</h2>"))
+  e.error((data) ->
+    $('#spinner h2').hide()
+    $('#current_move').html("<h2>Server Error: #{data.responseText}</h2>"))
 
 request = (path, f=null, opts={}) ->
   opts.url = path
@@ -38,6 +40,7 @@ request = (path, f=null, opts={}) ->
   opts.cache = false
   opts.success = handleActions
   opts.data = addToken(if f then f() else {})
+  $('#spinner h2').show()
   handleError($.ajax(opts))
   false
 
@@ -49,6 +52,7 @@ post = (path, f=null, opts={}) ->
 gameState = -> window.game.state()
 
 handleActions = (actions) ->
+  $('#spinner h2').hide()
   for a in actions
     handleAction(a)
 

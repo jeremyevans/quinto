@@ -24,3 +24,6 @@ table {margin: auto;}
 #rules {width: 600px; margin: auto; clear: both;}
 #rules h2, #rules h3, #rules p {text-align: left;}
 #rules h2.link {text-align: center;}
+
+#spinner {height: 50px;}
+#spinner h2 {display: none;}
