@@ -4,6 +4,13 @@ Quinto is based on the 1960s 3M board game of the same name, simplest to
 describe as a numeric version of Scrabble.  This is currently the only
 known electronic implementation of Quinto.
 
+## Demo
+
+A demo is available at: http://quinto.herokuapp.com
+
+You can access the server via a browser or the included command line
+client to play online against other users.
+
 ## Setup
 
 The Quinto server is a nodejs application, so you'll need to install
@@ -61,9 +68,9 @@ For local mode, just start coffee and require the file:
 
     coffee -r ./shell.coffee
 
-For remote mode, you pass some options and a URL:
+For remote mode, you can pass some options and a URL:
 
-    Usage: coffee ./shell.coffee options url
+    Usage: coffee ./shell.coffee [options] [url]
     
     Options:
       -u  username/email                         [string]  [required]
@@ -71,6 +78,9 @@ For remote mode, you pass some options and a URL:
       -g  game id                                [string]
       -n  start new game against other player(s) [string]
       -r  register new user                      [boolean]
+
+If you don't provide a URL, it will use the demo server at
+http://quinto.herokuapp.com as the server.
 
 If you don't provide a game id, it will show you a list
 of game ids and related player emails, and you can then run the
@@ -89,7 +99,8 @@ secure method would be to generate a random token per user per game.
 
 Obviously, to have any security at all, you have to host the server
 using SSL.  The default app does not do this, you need to put a
-reverse proxy (e.g. nginx) in front of the app to handle SSL.
+reverse proxy (e.g. nginx) in front of the app to handle SSL.  The
+demo app also does not do this, and should be considered insecure.
 
 ## Tests
 

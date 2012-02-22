@@ -50,7 +50,7 @@ if require.main == module
   # Remote mode using server
   Optimist = require('optimist')
   ARGV = Optimist
-    .usage('Play quinto online\nUsage: $0 options url')
+    .usage('Play quinto online\nUsage: $0 [options] [url]')
     .demand(['u'])
     .describe('u', 'username/email')
     .describe('p', 'password')
@@ -63,7 +63,7 @@ if require.main == module
   Future = require('./future_wrapper')
   Fiber.run ->
     URL = require('url')
-    baseUrl = URL.parse(ARGV._[0])
+    baseUrl = URL.parse(ARGV._[0] || 'http://quinto.herokuapp.com')
     HTTP = require(if baseUrl.protocol == 'https:' then 'https' else 'http')
     Readline = require 'readline'
     Rl = Readline.createInterface(process.stdin, process.stdout)
