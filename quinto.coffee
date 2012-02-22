@@ -172,8 +172,9 @@ class GameState
       centerY = (@game.boardY-1)/2
       unless b[@translatePos(centerX, centerY)]
         throw("opening move must have tile placed in center square (#{@translatePos(centerX, centerY)})")
-      unless @sum(n for [n, x, y] in ts) % @game.sumEqual == 0 
-        throw("opening move must sum to multiple of #{@game.sumEqual}")
+      sm = @sum(n for [n, x, y] in ts)
+      unless sm % @game.sumEqual == 0 
+        throw("opening move sums to #{sm}, which is not a multiple of #{@game.sumEqual}")
 
   reorderTiles: (b, adj_ts, ts) ->
     return adj_ts if ts.length == 0
