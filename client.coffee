@@ -143,7 +143,7 @@ initPlayer = ->
   window.playerPosition = null
   $("#new_game").html("<a href='#'>Start New Game</a>")
   $("#new_game a").click ->
-    $('#new_game').html("<form><input name='emails' placeholder='Emails of other players'/><input type='submit' value='Start New Game'/></form>")
+    $('#new_game').html("<form><input name='emails' placeholder='Usernames/Emails of other players' size='40'/><input type='submit' value='Start New Game'/></form>")
     $('#new_game form').submit(post('/game/new', -> $('#new_game form').serializeObject()))
   $("#join_game").html("<a href='#'>Join Game</a>")
   $("#join_game a").click(-> request('/game/list'))
@@ -232,11 +232,11 @@ showRules = ->
   $('#rules a').click(hideRules)
 
 login = ->
-  $('#login').html("<form id='login_form' action='#'><input name='email' placeholder='Email'/><input type='password' name='password' placeholder='Password'/><input type='submit' value='Login'/></form>")
+  $('#login').html("<form id='login_form' action='#'><input name='email' placeholder='Username/Email'/><input type='password' name='password' placeholder='Password'/><input type='submit' value='Login'/></form>")
   $('#login_form').submit(post("/player/login", -> $('#login_form').serialize()))
 
 register = ->
-  $('#register').html("<form id='register_form' action='#'><input name='email' placeholder='Email'/><input type='password' name='password' placeholder='Password'/><input type='submit' value='Register'/></form>")
+  $('#register').html("<form id='register_form' action='#'><input name='email' placeholder='Username/Email'/><input type='password' name='password' placeholder='Password'/><input type='submit' value='Register'/></form>")
   $('#register_form').submit(post("/player/register", -> $('#register_form').serialize()))
 
 selectTile = (e) ->
