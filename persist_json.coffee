@@ -12,7 +12,7 @@ wrappedFuncs = [[fs, 'readFile'], [fs, 'readdir'], [fs, 'mkdir'], [fs, 'writeFil
 for [m, f] in wrappedFuncs
   F[f] = Future.wrap_wait(m[f])
 
-F.exists = Future.wrap_wait(((p, f) -> path.exists(p, (e) -> f(null, e))))
+F.exists = Future.wrap_wait(((p, f) -> fs.exists(p, (e) -> f(null, e))))
 
 objFromJsonWithProto = (proto, filename) ->
   data = F.readFile(filename)
@@ -51,7 +51,7 @@ Q.Player.tryNextId = 1
 Q.Player.nextId = ->
   for i in [@tryNextId..maxPlayers] by 1
     try
-      F.mkdir "#{ROOT}/players/#{i}", 0755
+      F.mkdir "#{ROOT}/players/#{i}", 0o755
       @tryNextId = i+1
       return i
     catch err
@@ -63,7 +63,7 @@ Q.Player.prototype.persist = (hash) ->
   if F.exists("#{ROOT}/emails/#{normalizeEmail(@email)}")
     throw "email already exists in database: #{@email}"
   @id = Q.Player.nextId()
-  F.mkdir "#{ROOT}/players/#{@id}/games", 0755
+  F.mkdir "#{ROOT}/players/#{@id}/games", 0o755
   obj = {id: @id, email: @email, token: @token, hash: hash}
   F.writeFile "#{ROOT}/players/#{@id}/player", JSON.stringify(obj)
   F.symlink "../players/#{@id}/player", "#{ROOT}/emails/#{normalizeEmail(@email)}"
@@ -95,7 +95,7 @@ Q.Game.tryNextId = 1
 Q.Game.nextId = ->
   for i in [@tryNextId..maxPlayers] by 1
     try
-      F.mkdir "#{ROOT}/games/#{i}", 0755
+      F.mkdir "#{ROOT}/games/#{i}", 0o755
       @tryNextId = i+1
       return i
     catch err
@@ -105,8 +105,8 @@ Q.Game.nextId = ->
 Q.Game.prototype.persist = ->
   return if @id
   @id = Q.Game.nextId()
-  F.mkdir "#{ROOT}/games/#{@id}/players", 0755
-  F.mkdir "#{ROOT}/games/#{@id}/states", 0755
+  F.mkdir "#{ROOT}/games/#{@id}/players", 0o755
+  F.mkdir "#{ROOT}/games/#{@id}/states", 0o755
   for p, i in @players
     F.writeFile "#{ROOT}/players/#{p.id}/games/#{@id}", ""
     F.symlink "../../../players/#{p.id}/player", "#{ROOT}/games/#{@id}/players/#{i}"
