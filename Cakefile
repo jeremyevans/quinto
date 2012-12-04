@@ -18,9 +18,11 @@ integration = (f) ->
   process.env.PORT or= '3001'
   process.env.QUINTO_TEST or= '1'
   quinto = spawn('node', ['server.js'])
-  system 'rspec', ['-b', 'spec/integration_spec.rb'], (code) ->
-    quinto.kill()
-    f()
+  setTimeout (->
+    system 'rspec', ['-b', 'spec/integration_spec.rb'], (code) ->
+      quinto.kill()
+      f()
+    ), 3000
 
 integration_json = (f) ->
   path = require 'path'
