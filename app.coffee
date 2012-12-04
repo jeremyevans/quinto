@@ -100,7 +100,7 @@ moveOrPass = (f) ->
 
 lookupPlayers = (emails) ->
   for e in emails
-    Q.Player.lookup(e) || (throw "No registered player with email: #{email}")
+    Q.Player.lookup(e) || (throw "No registered player with email: #{e}")
 
 app.get '/app.js', (req, res, next) ->
   res.send(client_js, {'Content-Type': 'text/javascript'})
