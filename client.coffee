@@ -164,7 +164,7 @@ actionHandler.newGame = (a) ->
 
 actionHandler.listGames = (a) ->
   options = for g in a.games
-    "<option value='#{g.id}'>#{g.id} - #{(pe for pe in g.players when pe != window.playerEmail).join('')}</option>"
+    "<option value='#{g.id}'>#{g.id} - #{(pe for pe in g.players when pe != window.playerEmail).join(', ')}</option>"
   $('#join_game').html("<form><select name='gameId'>#{options}</select><input type='submit' value='Join Game'/></form>")
   $("#join_game form").submit(-> request('/game/join', -> $('#join_game form').serializeObject()))
 
