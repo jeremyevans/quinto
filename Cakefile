@@ -53,9 +53,8 @@ spec_go = (f) ->
 
 integration_go = (f) ->
   process.env.QUINTO_SERVER or= 'go'
-  system 'go', ['build', 'quinto_server.go'], (code) ->
+  system 'go', ['install', 'quinto'], (code) ->
     integration_pg ->
-      system 'rm', ['quinto_server'], f
 
 task 'spec', 'run the node unit specs', (options) ->
   spec ->

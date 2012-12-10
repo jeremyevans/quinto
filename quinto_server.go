@@ -1,6 +1,6 @@
 package main
 
-import "./quinto"
+import "quinto/quinto"
 
 func main() {
 	quinto.Setup()

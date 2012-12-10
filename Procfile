@@ -1,1 +1,1 @@
-web: quinto_server
+web: quinto
