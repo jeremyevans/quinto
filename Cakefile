@@ -17,10 +17,13 @@ spec = (f) ->
 integration = (f) ->
   process.env.PORT or= '3001'
   process.env.QUINTO_TEST or= '1'
-  quinto = spawn('node', ['server.js'])
+  quinto = if process.env.QUINTO_SERVER == 'go'
+    spawn('./quinto_server', [])
+  else
+    spawn('node', ['server.js'])
   setTimeout (->
     system 'rspec', ['-b', 'spec/integration_spec.rb'], (code) ->
-      quinto.kill()
+      quinto.kill('SIGKILL')
       f()
     ), 3000
 
@@ -45,16 +48,37 @@ integration_pg = (f) ->
         integration ->
           system 'dropdb', ['quinto_test'], f
 
-task 'spec', 'run the jasmine unit specs', (options) ->
+spec_go = (f) ->
+  system 'go', ['test', './quinto'], f
+
+integration_go = (f) ->
+  process.env.QUINTO_SERVER or= 'go'
+  system 'go', ['build', 'quinto_server.go'], (code) ->
+    integration_pg ->
+      system 'rm', ['quinto_server'], f
+
+task 'spec', 'run the node unit specs', (options) ->
   spec ->
 
-task 'integration_json', 'run the capybara integration specs', (options) ->
+task 'integration_json', 'run the capybara integration specs with node/json', (options) ->
   integration_json ->
 
-task 'integration_pg', 'run the capybara integration specs', (options) ->
+task 'integration_pg', 'run the capybara integration specs with node/PostgreSQL', (options) ->
   integration_pg ->
+
+task 'spec_go', 'run the go unit specs', (options) ->
+  spec_go ->
+
+task 'integration_go', 'run the capybara integration specs with go/PostgreSQL', (options) ->
+  integration_go ->
+
+task 'app.js', 'regenerate the app.js file', (options) ->
+  system 'sh', ['-c', 'cat client.coffee quinto.coffee | coffee -cs > public/app.js'], (code) ->
 
 task 'all', (options) ->
   spec ->
-    integration_json ->
-      integration_pg ->
+    spec_go ->
+      integration_json ->
+        integration_pg ->
+          integration_go ->
+
