@@ -6,7 +6,6 @@ require 'capybara/rspec'
 require 'headless'
 
 Capybara.javascript_driver = :webkit
-SLEEP_TIME = ENV['SLEEP_TIME'] ? ENV['SLEEP_TIME'].to_f : 0.3
 
 RSpec.configure do |c|
   c.before do
@@ -52,12 +51,16 @@ describe 'Quinto Site', :type=>:request, :js=>true do
   end
 
   def wait
-    sleep SLEEP_TIME
+    while page.evaluate_script("$('#spinner h2').css('display') == 'block'") do
+      sleep 0.1
+      print '.'
+    end
+    sleep 0.3
   end
 
   def click_button(*)
     super
-    wait 
+    wait
   end
 
   def click(locator)
@@ -499,7 +502,7 @@ describe 'Quinto Site', :type=>:request, :js=>true do
     click('#b11')
     click("##{page.evaluate_script("$('.rack_tile:not(.move):contains(9)').attr('id')")}")
     click_button('Commit Move')
-
+  
     join_game(:foo)
     click('#c6')
     click("##{page.evaluate_script("$('.rack_tile:not(.move):contains(2)').attr('id')")}")
