@@ -1,1 +1,1 @@
-web: node server.js
+web: quinto_server
