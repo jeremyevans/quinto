@@ -152,7 +152,7 @@ initPlayer = ->
   $("#join_game").html("<a href='#'>Join Game</a>")
   $("#join_game a").click(-> request('/game/list'))
   $("#current_move").html("Thanks for logging in, #{escape(window.playerEmail)}")
-  $('#leave_game, #board, #rack, #scores').html('')
+  $('#leave_game, #board, #rack, #scores, #to_move').html('')
   
 actionHandler.newGame = (a) ->
   window.gameId = a.gameId
