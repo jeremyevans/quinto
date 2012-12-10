@@ -751,10 +751,14 @@ func prepare(s string) *sql.Stmt {
 
 func setup_db() {
 	var err error
-	if TEST_MODE {
-		DB, err = sql.Open("postgres", "user=postgres dbname=quinto_test sslmode=disable")
+	if os.Getenv("DATABASE_CONFIG") != "" {
+		DB, err = sql.Open("postgres", os.Getenv("DATABASE_CONFIG"))
 	} else {
-		DB, err = sql.Open("postgres", "user=postgres dbname=quinto_go sslmode=disable")
+		if TEST_MODE {
+			DB, err = sql.Open("postgres", "user=postgres dbname=quinto_test sslmode=disable")
+		} else {
+			DB, err = sql.Open("postgres", "user=postgres dbname=quinto_go sslmode=disable")
+		}
 	}
 	panic_error("sql.Open", err)
 	PlayerInsert = prepare("INSERT INTO players (email, hash, token) VALUES ($1, $2, $3) RETURNING id")
