@@ -97,11 +97,11 @@ if require.main == module
       if opts.method == 'POST' && opts.data
         req.write(QS.stringify(opts.data))
       req.end()
-      res = yield()
+      res = Fiber.yield()
       data = []
       res.on('data', (chunk) -> data.push(chunk))
       res.on('end', -> fiber.run())
-      yield()
+      Fiber.yield()
       doneLoading()
       if res.statusCode == 200
         JSON.parse(data.join(''))
@@ -172,7 +172,7 @@ if require.main == module
           when 'poll'
             fiber = Fiber.current
             setTimeout((-> fiber.run()), 10000)
-            yield()
+            Fiber.yield()
             handleActions(jsonRequest(action.poll))
           when 'gameOver'
             game.state().gameOver = true
