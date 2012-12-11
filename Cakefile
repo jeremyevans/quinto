@@ -18,7 +18,7 @@ integration = (f) ->
   process.env.PORT or= '3001'
   process.env.QUINTO_TEST or= '1'
   quinto = if process.env.QUINTO_SERVER == 'go'
-    spawn('./quinto_server', [])
+    spawn("#{process.env.GOPATH}/bin/quinto", [])
   else
     spawn('node', ['server.js'])
   setTimeout (->
