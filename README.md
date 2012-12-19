@@ -11,10 +11,20 @@ A demo is available at: http://quinto.herokuapp.com
 You can access the server via a browser or the included command line
 client to play online against other users.
 
-## Setup
+## Included
 
-The Quinto server is a nodejs application, so you'll need to install
-nodejs first.  After installing node, run:
+Included are the following implementations:
+
+1) Command Line Client written in CoffeeScript/NodeJS
+2) Server written in CoffeeScript/NodeJS
+3) Server written in Go
+
+Both servers operate roughly the same way, you only need to run one of
+them.
+
+## Setup - NodeJS
+
+After installing NodeJS, run:
 
     npm install
 
@@ -40,9 +50,9 @@ The command line interface requires optimist:
 This is only required if want to connect to a remote server using
 the command line interface.
 
-## Running the Server
+## Running the NodeJS Server
 
-To run the server:
+To run the NodeJS Quinto server:
 
     node server.js
 
@@ -88,6 +98,31 @@ client again providing the gameId.
 
 If you don't provide the password on the command line (which is
 a good idea for security reasons), it will prompt you to enter one.
+
+## Setup - Go
+
+After installing Go, make sure that the repository is placed in
+$GOPATH/src/quinto.  Then install the dependencies:
+
+    go get
+
+You can then install the executable:
+
+    go install quinto
+
+The Quinto Go server requires a PostgreSQL backend, which you can initialize
+via:
+
+    create_db quinto
+    psql < schema.sql quinto
+
+You may need to set the DATABASE_CONFIG environment variable to a PostgreSQL
+connection string before starting the server, see
+https://github.com/bmizerany/pq for details about connection strings.
+
+You can then run the server:
+
+    $GOPATH/bin/quinto
 
 ## Security
 
