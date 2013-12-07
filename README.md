@@ -6,7 +6,7 @@ known electronic implementation of Quinto.
 
 ## Demo
 
-A demo is available at: http://quinto.herokuapp.com
+A demo is available at: http://quinto-demo.jeremyevans.net
 
 ## Setup
 
