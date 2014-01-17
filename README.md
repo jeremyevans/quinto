@@ -49,11 +49,16 @@ demo app also does not do this, and should be considered insecure.
 
 ## Tests
 
-Quinto uses Jasmine for unit tests and capybara (written in ruby) for
-integration tests.  You can run all test suites using the default rake
-task:
+Quinto uses Jasmine for javascript unit tests, go for the server unit
+tests, and capybara (written in ruby) for the web tests.  You can run
+all test suites using the default rake task:
 
     rake
+
+For the web tests, you need to setup a test database manually first:
+
+    createdb quinto_test
+    psql -f schema.sql quinto_test
 
 ## Source
 

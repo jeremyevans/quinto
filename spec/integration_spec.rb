@@ -117,6 +117,8 @@ describe 'Quinto Site', :type=>:request, :js=>true do
     click_link 'Leave Game'
     click_link 'Join Game'
     wait
+    page.html =~ /(\d+) - foo@bar.com/
+    game_id = $1.to_i
     click_button 'Join Game'
     page.html.should =~ /foo@bar.com's Turn/
 
@@ -524,7 +526,7 @@ describe 'Quinto Site', :type=>:request, :js=>true do
     click_link 'Leave Game'
     click_link 'Join Game'
     wait
-    page.html.should =~ /1 - foo@bar.com/
-    page.html.should_not =~ /2 - foo@bar.com/
+    page.html.should =~ /#{game_id} - foo@bar.com/
+    page.html.should_not =~ /#{game_id+1} - foo@bar.com/
   end
 end
