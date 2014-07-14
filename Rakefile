@@ -5,7 +5,7 @@ end
 
 desc 'Run go server unit tests'
 task 'go-spec' do
-  sh 'go test ./quinto'
+  sh 'go test ./quinto_lib'
 end
 
 desc 'Run go server integration tests'
@@ -20,7 +20,7 @@ task 'web-spec' do
   ENV['DATABASE_CONFIG'] ||= "user=#{ENV['PGUSER']} dbname=#{ENV['PGDATABASE']} host=#{ENV['PGHOST']} sslmode=disable"
 
   sh "psql -f clean.sql \"#{ENV['DATABASE_CONFIG']}\""
-  pid = Process.spawn("#{ENV['GOPATH']}/bin/quinto")
+  pid = Process.spawn("./quinto")
   sleep 1
   begin
     sh "#{rspec} -b spec/integration_spec.rb"

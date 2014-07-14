@@ -1,6 +1,6 @@
 package main
 
-import "quinto/quinto"
+import "quinto/quinto_lib"
 
 func main() {
 	quinto.Setup()
