@@ -29,19 +29,20 @@ addToken = (obj) ->
   obj.playerToken = window.playerToken if window.playerToken
   obj
 
-handleError = (e) ->
-  e.error((data) ->
-    $('#spinner h2').hide()
-    $('#current_move').html("<h2>Server Error: #{data.responseText}</h2>"))
-
 request = (path, f=null, opts={}) ->
   opts.url = path
   opts.dataType = 'json'
   opts.cache = false
   opts.success = handleActions
   opts.data = addToken(if f then f() else {})
-  $('#spinner h2').show()
-  handleError($.ajax(opts))
+  opts.timeout = 600000
+  if !opts.no_spinner
+    $('#spinner h2').show()
+  if !opts.error
+    opts.error = (data) ->
+      $('#spinner h2').hide()
+      $('#current_move').html("<h2>Server Error: #{data.responseText}</h2>")
+  $.ajax(opts)
   false
 
 post = (path, f=null, opts={}) ->
@@ -65,7 +66,10 @@ handleAction = (a) ->
 
 actionHandler.poll = (a) ->
   i = window.gameId
-  setTimeout((-> request(a.poll) if window.gameId == i), 10000)
+  request(a.poll, null, {
+    "error": (-> setTimeout((-> actionHandler.poll(a) if window.gameId == i), 60000)),
+    "no_spinner": true
+  })
 
 myTurn = ->
   window.playerPosition == gameState().toMove

@@ -52,6 +52,10 @@ type Move []TilePlace
 
 var TEST_MODE bool
 
+type GSChan chan *GameState
+type GSChanArray []GSChan
+var LISTENERS map[int]GSChanArray
+
 var DEFAULT_TILE_BAG [90]int
 const RACK_SIZE int = 5
 const MAX_RUN int = 5
@@ -924,6 +928,14 @@ func move_or_pass(w http.ResponseWriter, r *http.Request, f func (*GameState) (*
 
 	gs.persist(GameStateInsert)
 	write_json(w, update_actions_json(gs, player))
+
+	chans, ok := LISTENERS[gs.game.id]
+	if ok {
+		for _, c := range chans {
+			c <- gs
+		}
+		delete(LISTENERS, gs.game.id)
+	}
 }
 
 func Log(handler http.Handler) http.Handler {
@@ -1041,16 +1053,34 @@ func setup_handlers() {
 			return
 		}
 
+		var gs *GameState
+		var player *Player
 		if still {
-			write_json(w, []js_map{poll_json(move_count)})
-		} else {
-			player, gs, err := player_and_game_state_from_request(r)
+			player, err = player_from_request(r)
 			if err != nil {
 				http.Error(w, err.Error(), 403)
 				return
 			}
-			write_json(w, update_actions_json(gs, player))
+
+			c := make(chan *GameState)
+			chans, ok := LISTENERS[game_id]
+			if ok {
+				LISTENERS[game_id] = append(chans, c)
+			} else {
+				chans = make([]GSChan, 1)
+				chans[0] = c
+				LISTENERS[game_id] = chans
+			}
+    
+			gs = <- c
+		} else {
+			player, gs, err = player_and_game_state_from_request(r)
+			if err != nil {
+				http.Error(w, err.Error(), 403)
+				return
+			}
 		}
+		write_json(w, update_actions_json(gs, player))
 	})
 
 	http.HandleFunc("/game/pass", func(w http.ResponseWriter, r *http.Request) {
@@ -1077,6 +1107,7 @@ func Setup() {
 }
 
 func HttpServe() {
+	LISTENERS = make(map[int]GSChanArray)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"
