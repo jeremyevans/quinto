@@ -117,16 +117,20 @@
   actionHandler.poll = function(a) {
     var i;
     i = window.gameId;
-    return request(a.poll, null, {
-      "error": (function() {
-        return setTimeout((function() {
-          if (window.gameId === i) {
-            return actionHandler.poll(a);
-          }
-        }), 60000);
-      }),
-      "no_spinner": true
-    });
+    return setTimeout(function() {
+      if (window.gameId === i) {
+        return request(a.poll, null, {
+          "error": (function() {
+            return setTimeout((function() {
+              if (window.gameId === i) {
+                return actionHandler.poll(a);
+              }
+            }), 60000);
+          }),
+          "no_spinner": true
+        });
+      }
+    }, 10000);
   };
 
   myTurn = function() {

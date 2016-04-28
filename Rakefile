@@ -4,33 +4,28 @@ task 'jasmine-spec' do
 end
 
 desc 'Run go server unit tests'
-task 'go-spec' do
-  sh 'go test ./quinto_lib'
+task 'unit-spec' do
+  sh "#{FileUtils::RUBY} spec/unit_test.rb"
 end
 
 desc 'Run go server integration tests'
 task 'web-spec' do
   ENV['QUINTO_TEST'] = '1'
   ENV['PORT'] ||= '3001'
-  rspec = ENV['RSPEC'] || 'rspec'
+  ENV['DATABASE_URL'] ||= "postgres:///quinto_test?user=quinto"
 
-  ENV['PGUSER'] ||= 'postgres'
-  ENV['PGDATABASE'] ||= 'quinto_test'
-  ENV['PGHOST'] ||= 'localhost'
-  ENV['DATABASE_CONFIG'] ||= "user=#{ENV['PGUSER']} dbname=#{ENV['PGDATABASE']} host=#{ENV['PGHOST']} sslmode=disable"
-
-  sh "psql -f clean.sql \"#{ENV['DATABASE_CONFIG']}\""
-  pid = Process.spawn("./quinto")
-  sleep 1
+  sh "psql -U quinto -f clean.sql \"quinto_test\""
+  Process.spawn("#{ENV['UNICORN']||'unicorn'} -p #{ENV['PORT']} -D -c spec/unicorn.conf")
   begin
-    sh "#{rspec} -b spec/integration_spec.rb"
+    sleep 1
+    sh "#{FileUtils::RUBY} spec/integration_spec.rb"
   ensure 
-    Process.kill(:SIGTERM, pid)
+    Process.kill(:SIGTERM, File.read('spec/unicorn.pid').to_i)
   end
 end
 
 desc 'Run all specs'
-task 'default'=>%w'jasmine-spec go-spec web-spec'
+task 'default'=>%w'jasmine-spec unit-spec web-spec'
 
 desc 'Compile the coffeescript files to javascript'
 task 'app.js' do

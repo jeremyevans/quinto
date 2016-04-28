@@ -2,27 +2,25 @@ Encoding.default_internal = Encoding.default_external = 'ISO-8859-1' if RUBY_VER
 require 'capybara'
 require 'capybara-webkit'
 require 'capybara/dsl'
-require 'capybara/rspec'
 require 'headless'
+require 'minitest/hooks/default'
+require 'minitest/autorun'
 
-Capybara.javascript_driver = :webkit
+Capybara.current_driver = :webkit
+Capybara.default_selector = :css
+Capybara.server_port = ENV['PORT'].to_i
 
-RSpec.configure do |c|
-  c.before do
-    Capybara.default_selector = :css
-    Capybara.server_port = ENV['PORT'].to_i
+describe 'Quinto Site' do
+  include Capybara::DSL
+
+  around do |&block|
+    Headless.ly{super(&block)}
   end
 
-  c.around do |e|
-    Headless.ly(&e)
-  end
-
-  c.after do
+  after do
     Capybara.reset_sessions!
   end
-end
 
-describe 'Quinto Site', :type=>:request, :js=>true do
   def home
     visit('http://127.0.0.1:3001/')
   end
@@ -70,9 +68,9 @@ describe 'Quinto Site', :type=>:request, :js=>true do
   it "should work as expected" do
     # Rules
     home
-    page.html.should_not =~ /How to Play Quinto/
+    page.html.wont_match /How to Play Quinto/
     click_link 'Rules'
-    page.html.should =~ /How to Play Quinto/
+    page.html.must_match /How to Play Quinto/
 
     # Registering User #1
     home
@@ -81,9 +79,9 @@ describe 'Quinto Site', :type=>:request, :js=>true do
     fill_in('password', :with=>'foobar')
     click_button 'Register'
     h = page.html
-    h.should =~ /Start New Game/
-    h.should =~ /Join Game/
-    h.should =~ /Thanks for logging in, foo@bar.com/
+    h.must_match /Start New Game/
+    h.must_match /Join Game/
+    h.must_match /Thanks for logging in, foo@bar.com/
 
     # Registering User #2
     home
@@ -92,26 +90,26 @@ describe 'Quinto Site', :type=>:request, :js=>true do
     fill_in('password', :with=>'barfoo')
     click_button 'Register'
     h = page.html
-    h.should =~ /Start New Game/
-    h.should =~ /Join Game/
-    h.should =~ /Thanks for logging in, bar@foo.com/
+    h.must_match /Start New Game/
+    h.must_match /Join Game/
+    h.must_match /Thanks for logging in, bar@foo.com/
 
     # Test starting game with same email fails
     click_link 'Start New Game'
     fill_in('emails', :with=>'bar@foo.com:[3,4,4,8,10,2,2,3,4,10,7,9,5,8,6,8,8,7,2,4,6,1,7,2,1,7,9,9,7,6,4,3,5,5,10,8,4,8,8,9,6,1,5,1,9,3,10,7,8,8,4,7,6,7,4,8,1,4,7,5,10,7,3,9,10,7,3,6,2,7,10,9,4,6,5,6,3,9,8,9,8,9,7,6,2,9,1,7,9,6]')
     click_button 'Start New Game'
-    page.html.should =~ /cannot have same player in two separate positions/
+    page.html.must_match /cannot have same player in two separate positions/
 
     # Test starting game right after registering
     login_bar
     click_link 'Start New Game'
     fill_in('emails', :with=>'foo@bar.com:[3,4,4,8,10,2,2,3,4,10,7,9,5,8,6,8,8,7,2,4,6,1,7,2,1,7,9,9,7,6,4,3,5,5,10,8,4,8,8,9,6,1,5,1,9,3,10,7,8,8,4,7,6,7,4,8,1,4,7,5,10,7,3,9,10,7,3,6,2,7,10,9,4,6,5,6,3,9,8,9,8,9,7,6,2,9,1,7,9,6]')
     click_button 'Start New Game'
-    page.html.should =~ /Your Turn!/
+    page.html.must_match /Your Turn!/
 
     # Test passing
     click_button 'Pass'
-    page.html.should =~ /foo@bar.com's Turn/
+    page.html.must_match /foo@bar.com's Turn/
 
     # Test leaving and reentering game
     click_link 'Leave Game'
@@ -120,124 +118,124 @@ describe 'Quinto Site', :type=>:request, :js=>true do
     page.html =~ /(\d+) - foo@bar.com/
     game_id = $1.to_i
     click_button 'Join Game'
-    page.html.should =~ /foo@bar.com's Turn/
+    page.html.must_match /foo@bar.com's Turn/
 
     # Test dragging and dropping tiles
     join_game(:foo)
     page.find_by_id('rack4').drag_to(page.find_by_id('i8'))
-    page.find('#i8').text.should == '10'
+    page.find('#i8').text.must_equal '10'
     click_button 'Commit Move'
 
     # Test dragging and dropping same rack tile twice
     # removes previous place
     join_game(:bar)
     page.find_by_id('rack4').drag_to(page.find_by_id('j8'))
-    page.find('#h8').text.should == ''
-    page.find('#j8').text.should == '10'
+    page.find('#h8').text.must_equal ''
+    page.find('#j8').text.must_equal '10'
     page.find_by_id('rack4').drag_to(page.find_by_id('h8'))
-    page.find('#h8').text.should == '10'
-    page.find('#j8').text.should == ''
+    page.find('#h8').text.must_equal '10'
+    page.find('#j8').text.must_equal ''
 
     # Test dragging and dropping different rack tile to same
     # board tile removes previous place
     join_game(:bar)
     page.find_by_id('rack4').drag_to(page.find_by_id('j8'))
-    page.find('#j8').text.should == '10'
+    page.find('#j8').text.must_equal '10'
     page.find_by_id('rack3').drag_to(page.find_by_id('j8'))
-    page.find('#j8').text.should == '8'
+    page.find('#j8').text.must_equal '8'
     page.find_by_id('rack4').drag_to(page.find_by_id('h8'))
-    page.find('#h8').text.should == '10'
-    page.find('#j8').text.should == '8'
+    page.find('#h8').text.must_equal '10'
+    page.find('#j8').text.must_equal '8'
 
     # Test nothing happens if you drop rack tile over
     # previously played tile
     join_game(:bar)
     page.find_by_id('rack3').drag_to(page.find_by_id('i8'))
-    page.find('#i8').text.should == '10'
+    page.find('#i8').text.must_equal '10'
 
     # Test clicking on board then rack
     join_game(:bar)
     click("#i7")
     click("#rack0")
-    page.find('#i7').text.should == '3'
+    page.find('#i7').text.must_equal '3'
     
     # Test clicking on rack and then on board
     click("#rack1")
     click("#i6")
-    page.find('#i6').text.should == '4'
+    page.find('#i6').text.must_equal '4'
 
     # Test error message when current move invalid
-    page.html.should =~ /consecutive tiles do not sum to multiple of 5/i
+    page.html.must_match /consecutive tiles do not sum to multiple of 5/i
 
     # Test error message removed when current move valid
     click("#rack3")
     click("#i5")
-    page.find('#i5').text.should == '8'
-    page.html.should_not =~ /consecutive tiles do not sum to multiple of 5/i
-    page.html.should =~ /Move Score: 25/
-    page.html.should =~ /i5-8:.+25/
+    page.find('#i5').text.must_equal '8'
+    page.html.wont_match /consecutive tiles do not sum to multiple of 5/i
+    page.html.must_match /Move Score: 25/
+    page.html.must_match /i5-8:.+25/
     
     # Test clicking on existing board tile and then rack tile removes
     # existing rack tile and uses new rack tile
     click("#i5")
-    page.find('#i5').text.should == ''
+    page.find('#i5').text.must_equal ''
     click("#rack2")
-    page.find('#i5').text.should == '4'
+    page.find('#i5').text.must_equal '4'
 
     # Test clicking on existing board tile twice just removes board tile 
     click("#i5")
     click("#i5")
-    page.find('#i5').text.should == ''
+    page.find('#i5').text.must_equal ''
     click("#rack2")
-    page.find('#i5').text.should == ''
+    page.find('#i5').text.must_equal ''
     click("#i5")
-    page.find('#i5').text.should == '4'
+    page.find('#i5').text.must_equal '4'
 
     # Test clicking on existing rack tile and then board tile moves rack
     # tile to new board place
     click("#rack2")
-    page.find('#i5').text.should == ''
+    page.find('#i5').text.must_equal ''
     click("#i4")
-    page.find('#i4').text.should == '4'
+    page.find('#i4').text.must_equal '4'
     
     # Test clicking on existing rack tile twice just removes rack tile
     click("#rack2")
     click("#rack2")
-    page.find('#i5').text.should == ''
+    page.find('#i5').text.must_equal ''
     click("#i4")
-    page.find('#i4').text.should == ''
+    page.find('#i4').text.must_equal ''
     click("#rack2")
-    page.find('#i4').text.should == '4'
+    page.find('#i4').text.must_equal '4'
 
     # Test clicking on one board tile then another just removes the tiles
     click("#i4")
-    page.find('#i4').text.should == ''
+    page.find('#i4').text.must_equal ''
     click("#i5")
-    page.find('#i5').text.should == ''
+    page.find('#i5').text.must_equal ''
     click("#i6")
-    page.find('#i6').text.should == ''
+    page.find('#i6').text.must_equal ''
     click("#i7")
-    page.find('#i7').text.should == ''
+    page.find('#i7').text.must_equal ''
     click("#rack0")
-    page.find('#i7').text.should == '3'
+    page.find('#i7').text.must_equal '3'
 
     click("#rack1")
     click("#i6")
-    page.find('#i6').text.should == '4'
+    page.find('#i6').text.must_equal '4'
     click("#rack2")
     click("#i5")
-    page.find('#i5').text.should == '4'
+    page.find('#i5').text.must_equal '4'
 
     # Test clicking on one played rack tile then another just removes
     # the tiles
     click("#rack2")
-    page.find('#i5').text.should == ''
+    page.find('#i5').text.must_equal ''
     click("#rack1")
-    page.find('#i6').text.should == ''
+    page.find('#i6').text.must_equal ''
     click("#rack0")
-    page.find('#i7').text.should == ''
+    page.find('#i7').text.must_equal ''
     click("#i6")
-    page.find('#i6').text.should == '3'
+    page.find('#i6').text.must_equal '3'
 
     ## Play a full game without errors
 
@@ -246,11 +244,11 @@ describe 'Quinto Site', :type=>:request, :js=>true do
     click_link 'Start New Game'
     fill_in('emails', :with=>'bar@foo.com:[3,4,4,8,10,2,2,3,4,10,7,9,5,8,6,8,8,7,2,4,6,1,7,2,1,7,9,9,7,6,4,3,5,5,10,8,4,8,8,9,6,1,5,1,9,3,10,7,8,8,4,7,6,7,4,8,1,4,7,5,10,7,3,9,10,7,3,6,2,7,10,9,4,6,5,6,3,9,8,9,8,9,7,6,2,9,1,7,9,6]')
     click_button 'Start New Game'
-    page.html.should =~ /Your Turn!/
+    page.html.must_match /Your Turn!/
 
     # Logging in and joining game
     join_game(:bar)
-    page.html.should =~ /foo@bar.com's Turn/
+    page.html.must_match /foo@bar.com's Turn/
 
     # Make moves
     join_game(:foo)
@@ -521,12 +519,12 @@ describe 'Quinto Site', :type=>:request, :js=>true do
     click("##{page.evaluate_script("$('.rack_tile:not(.move):contains(7)').attr('id')")}")
     click_button('Commit Move')
 
-    page.html.should =~ /Winners: foo@bar.com/
+    page.html.must_match /Winners: foo@bar.com/
 
     click_link 'Leave Game'
     click_link 'Join Game'
     wait
-    page.html.should =~ /#{game_id} - foo@bar.com/
-    page.html.should_not =~ /#{game_id+1} - foo@bar.com/
+    page.html.must_match /#{game_id} - foo@bar.com/
+    page.html.wont_match /#{game_id+1} - foo@bar.com/
   end
 end
