@@ -10,29 +10,25 @@ A demo is available at: http://quinto-demo.jeremyevans.net
 
 ## Setup
 
-The server is written in Go, so the first step is installing Go.
+The server is written in Ruby, so the first step is installing Ruby.
 
-After installing Go, make sure that the repository is placed in
-$GOPATH/src/quinto.  Then install the dependencies:
+After installing Ruby, install the dependencies:
 
-    go get
+    gem install -g Gemfile
 
-Then install the executable:
+The server requires a PostgreSQL backend. It's recommended you set up an
+application specific server and database:
 
-    go install quinto
-
-The server requires a PostgreSQL backend, which you can initialize via:
-
-    create_db quinto
+    create_user quinto
+    create_db -O quinto quinto
     psql < schema.sql quinto
 
-You may need to set the DATABASE\_CONFIG environment variable to a PostgreSQL
-connection string before starting the server, see
-https://github.com/bmizerany/pq for details about connection strings.
+You need to set the DATABASE\_URL environment variable to a PostgreSQL
+connection string before starting the server.
 
 You can then run the server:
 
-    $GOPATH/bin/quinto
+    foreman
 
 ## Security
 
@@ -49,15 +45,15 @@ demo app also does not do this, and should be considered insecure.
 
 ## Tests
 
-Quinto uses Jasmine for javascript unit tests, go for the server unit
-tests, and capybara (written in ruby) for the web tests.  You can run
-all test suites using the default rake task:
+Quinto uses Jasmine for javascript unit tests, ruby for the server unit
+tests and the web/integration tests.  You can run all test suites using
+the default rake task:
 
     rake
 
 For the web tests, you need to setup a test database manually first:
 
-    createdb quinto_test
+    createdb -O quinto quinto_test
     psql -f schema.sql quinto_test
 
 ## Source
