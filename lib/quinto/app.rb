@@ -4,6 +4,7 @@ require_relative 'db'
 
 module Quinto
   class App < Roda
+    opts[:root] = File.expand_path('../../..', __FILE__)
     TEST_MODE = ENV['QUINTO_TEST'] == '1'
 
     plugin :static, %w'/app.js /index.html /jquery-ui.min.js /jquery.min.js /spinner.gif /style.css'
