@@ -1,14 +1,14 @@
-desc 'Run jasmine unit tests'
+desc 'Run javascript unit tests'
 task 'jasmine-spec' do
   sh 'jasmine-node --coffee spec'
 end
 
-desc 'Run go server unit tests'
+desc 'Run ruby unit tests'
 task 'unit-spec' do
   sh "#{FileUtils::RUBY} spec/unit_test.rb"
 end
 
-desc 'Run go server integration tests'
+desc 'Run server integration tests'
 task 'web-spec' do
   ENV['QUINTO_TEST'] = '1'
   ENV['PORT'] ||= '3001'
