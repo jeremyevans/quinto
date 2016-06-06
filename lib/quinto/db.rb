@@ -5,7 +5,7 @@ require 'bcrypt'
 require 'securerandom'
 
 module Quinto
-  DB = Sequel.connect(ENV['DATABASE_URL'])
+  DB = Sequel.connect(ENV['QUINTO_DATABASE_URL'] || ENV['DATABASE_URL'])
   require 'logger'
   DB.loggers << Logger.new($stdout)
 
