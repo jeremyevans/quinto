@@ -17,10 +17,9 @@ end
 
 describe Player do
   it 'should have a working constructor' do
-    p = Player.new(1, 'bar@baz.com', 'blah')
+    p = Player.new(1, 'bar@baz.com')
     p.id.must_equal 1
     p.email.must_equal 'bar@baz.com'
-    p.token.must_equal 'blah'
   end
 end
 
