@@ -1,8 +1,3 @@
-desc 'Run javascript unit tests'
-task 'jasmine-spec' do
-  sh 'jasmine-node --coffee spec'
-end
-
 desc 'Run ruby unit tests'
 task 'unit-spec' do
   sh "#{FileUtils::RUBY} spec/unit_test.rb"
@@ -25,9 +20,4 @@ task 'web-spec' do
 end
 
 desc 'Run all specs'
-task 'default'=>%w'jasmine-spec unit-spec web-spec'
-
-desc 'Compile the coffeescript files to javascript'
-task 'app.js' do
-  sh 'cat client.coffee quinto.coffee | coffee -cs > public/app.js'
-end
+task 'default'=>%w'unit-spec web-spec'
