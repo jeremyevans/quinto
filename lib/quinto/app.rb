@@ -79,7 +79,6 @@ module Quinto
           end
 
           emails = email_str.split(',')
-          total_players = emails.length + 1
           players = emails.map{|email| Player.from_email(email)}
           players.unshift(player)
 
