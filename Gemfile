@@ -3,6 +3,8 @@ ruby "2.3.1"
 
 gem 'sequel'
 gem 'roda'
+gem 'rodauth'
+gem 'rack_csrf'
 gem 'bcrypt'
 gem 'pg'
 gem 'sequel_pg'

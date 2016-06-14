@@ -7,8 +7,15 @@ module Quinto
     opts[:root] = File.expand_path('../../..', __FILE__)
     TEST_MODE = ENV['QUINTO_TEST'] == '1'
 
-    plugin :static, %w'/app.js /index.html /jquery-ui.min.js /jquery.min.js /spinner.gif /style.css'
+    secret = ENV['QUINTO_SESSION_SECRET'] || SecureRandom.random_bytes(30)
+    use Rack::Session::Cookie, :secret=>secret, :key => '_quinto_session'
+
+    plugin :public
+    plugin :render, :escape=>true
+    plugin :symbol_views
+    plugin :symbol_matchers
     plugin :json
+    plugin :param_matchers
 
     plugin :not_found do
       "Not Found"
@@ -20,23 +27,48 @@ module Quinto
       e.message
     end
 
+    plugin :rodauth do
+      enable :login, :logout, :create_account
+      prefix "auth"
+      accounts_table :players
+      account_password_hash_column :hash
+      require_email_address_logins? false
+      set_new_account_password do |_|
+        super(_)
+        account[:token] = '1'
+      end
+      after_login do
+        session[:email] = account[:email]
+      end
+      logout_redirect '/auth/login'
+    end
+
     route do |r|
+      r.public
+
+      r.on "auth" do
+        r.rodauth
+      end
+
+      if player_id = rodauth.session_value
+        @player = Player.new(player_id, session[:email])
+      end
+
       r.root do
-        r.redirect '/index.html'
-      end
-
-      r.on "player" do
-        r.post "login" do
-          set_player_json(Player.from_login(r['email'], r['password']))
-        end
-
-        r.post "register" do
-          set_player_json(Player.register(r['email'], r['password']))
+        if rodauth.logged_in?
+          @games = player.active_games.map{|id, players| ["#{id} - #{players.join(', ')}", id]}
+          :home
+        else
+          :index
         end
       end
+
+      next unless player
 
       r.on "game" do
-        player = player_from_request
+        r.is :param => 'id' do |game_id|
+          r.redirect "/game/#{game_id.to_i}"
+        end
 
         r.post "new" do
           email_str = r['emails']
@@ -62,44 +94,44 @@ module Quinto
             Game.start(players)
           end
 
-          new_game_json(game_state, player)
+          r.redirect("/game/#{game_state.game.id}")
         end
 
-        r.get "list" do
-          game_list_json(player)
-        end
+        r.on :d do |game_id|
+          game_id = game_id.to_i
 
-        r.get "join" do
-          game_state = game_state_from_request
-          new_game_json(game_state, player)
-        end
-
-        r.get "check", :move_count do |move_count|
-          game_id = r["gameId"]
-          if Game.still_at_move(game_id, move_count)
-            [poll_json(move_count)]
-          else
-            game_state = game_state_from_request
-            update_actions_json(game_state, player)
+          r.get true do
+            game_state = game_state_from_request(game_id)
+            @players = game_state.game.player_emails
+            @position = game_state.game.player_position(player)
+            @game_id = game_state.game.id
+            :board
           end
-        end
 
-        r.post "pass" do
-          move_or_pass(&:pass)
-        end
+          r.get "check", :move_count do |move_count|
+            if Game.still_at_move(game_id, move_count)
+              [poll_json(move_count)]
+            else
+              game_state = game_state_from_request(game_id)
+              update_actions_json(game_state)
+            end
+          end
 
-        r.post "move" do
-          move_or_pass{|game_state| game_state.move(r['move'])}
+          r.post "pass" do
+            move_or_pass(game_id, &:pass)
+          end
+
+          r.post "move" do
+            move_or_pass(game_id){|game_state| game_state.move(r['move'])}
+          end
         end
       end
     end
 
-    def set_player_json(player)
-      [{"action"=>"setPlayer", "player"=>player.to_h}]
-    end
+    attr_reader :player
 
     UPDATE_ACTIONS_KEYS = {:board=>:board, :scores=>:scores, :to_move=>:toMove, :pass_count=>:passCount, :move_count=>:moveCount}.freeze
-    def update_actions_json(game_state, player)
+    def update_actions_json(game_state)
       state = {}
       UPDATE_ACTIONS_KEYS.each{|k,v| state[v] = game_state[k]}
       state["rack"] = game_state.racks[game_state.game.player_position(player)]
@@ -115,39 +147,24 @@ module Quinto
     end
 
     def poll_json(move_count)
-        {"action"=>"poll", "poll"=>"/game/check/#{move_count}"}
+      {"action"=>"poll", "poll"=>"/check/#{move_count}"}
     end
 
-    def new_game_json(game_state, player)
-      [{"action"=>"newGame", "players"=>game_state.game.player_emails, "position"=>game_state.game.player_position(player), "gameId"=>game_state.game.id}] +
-        update_actions_json(game_state, player)
-    end
-
-    def game_list_json(player)
-      [{"action"=>"listGames", "games"=>player.active_games.map{|game_id, players| {"id"=>game_id, "players"=>players}}}]
-    end
-
-    def player_from_request
-      Player.from_id_token(request["playerId"].to_i, request["playerToken"])
-    end
-
-    def game_state_from_request
-      unless game = Game.from_id_player(request["gameId"].to_i, request["playerId"].to_i)
+    def game_state_from_request(game_id)
+      unless game = Game.from_id_player(game_id, player.id)
         raise Error, "invalid game for player"
       end
       
       game.state
     end
 
-    def move_or_pass
-      player = player_from_request
-      game_state = game_state_from_request
+    def move_or_pass(game_id)
+      game_state = game_state_from_request(game_id)
 
       if game_state.game_over?
         raise Error, "Game already ended"
       end
 
-      p [game_state.to_move, game_state.game.players]
       unless player.id == game_state.player_to_move.id
         raise Error, "Not your turn to move #{player.id} #{game_state.player_to_move.id}"
       end
@@ -155,7 +172,7 @@ module Quinto
       game_state = yield(game_state)
       game_state.persist
 
-      update_actions_json(game_state, player)
+      update_actions_json(game_state)
     end
   end
 end

@@ -1,0 +1,23 @@
+<% unless @games.empty? %>
+  <h2>Join Game</h2>
+
+  <form action="/game">
+    <%== csrf_tag %>
+    <label for="join_game_select">Game:</label>
+    <select name="id" id="join_game_select">
+      <% @games.each do |text, id| %>
+        <option value="<%= id %>"><%= text %></option>
+      <% end %>
+    </select>
+    <input type="submit" class="btn btn-primary" value="Join Game">
+  </form>
+<% end %>
+
+<h2>New Game</h2>
+
+<form action="/game/new" method="POST">
+  <%== csrf_tag %>
+  <label for="emails">Other Players:</label>
+  <input type="text" name="emails" id="emails">
+  <input type="submit" class="btn btn-primary" value="Create New Game">
+</form>

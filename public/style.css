@@ -2,7 +2,8 @@ h1 {font-size: 32px; }
 h2 {font-size: 24px; }
 h3 {font-size: 20px; }
 body {font-size: 16px; }
-h1, h2, div {text-align: center;}
+div#rack h2 {text-align: center;}
+div#scores table {text-align: left;}
 table {margin: auto;}
 #board .board_tile, #rack .rack_tile {color: white;}
 #board .fixed, #board #i8.fixed, #rack .rack_tile {background-color: saddleBrown;}
@@ -10,10 +11,9 @@ table {margin: auto;}
 #board .move, #board #i8.move, #rack .move {background-color: gold; color: black; }
 #board .current, #board #i8.current, #rack .current {background-color: yellow; color: black; }
 
-#board_rack {float: right; text-align: left; width: 50%; min-width: 700px; }
-#board table, #board tr, #board td {background-color: gray; border: solid #555 2px; }
-#board td, .rack_tile {width: 30px; height: 30px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; padding: 1px; }
-#board td:hover {border-color: #ccc;}
+#board table, #board tr, #board td {background-color: gray; border: solid #555 2px; border-collapse: separate;}
+#board td, .rack_tile {width: 35px; height: 35px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; padding: 1px; }
+#board td:hover {border: solid #ccc 2px; }
 #board #i8 {background-color: #666; }
 
 #rack h2 {clear: both; margin-top: 0;}
@@ -26,4 +26,7 @@ table {margin: auto;}
 #rules h2.link {text-align: center;}
 
 #spinner {height: 50px;}
-#spinner h2 {display: none;}
+#spinner {display: none;}
+
+.to_move {font-weight: bold;}
+#commit_move, #pass {display: block; margin: auto;}

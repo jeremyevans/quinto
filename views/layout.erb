@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Quinto<%= " - #{@page_title}" if @page_title %></title>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel='stylesheet' href='/style.css' />
+  </head>
+  <body>
+    <nav class="navbar navbar-default" role="navigation">
+      <div class="container">
+        <a class="navbar-brand" href="/">Quinto</a>
+
+          <% if rodauth.logged_in? %>
+            <form action="/auth/logout" class="navbar-form pull-right" method="post">
+              <%== csrf_tag %>
+              <input class="btn btn-primary form-control auth-button" type="submit" value="Logout" />
+            </form>
+          <% else %>
+            <ul class="nav navbar-nav pull-right">
+              <li><a href="/auth/login">Login</a><li>
+              <li><a href="/auth/create-account">Create Account</a></li>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <% if flash[:notice] %>
+        <div class="alert alert-success"><p><%= flash[:notice] %></p></div>
+      <% end %>
+      <% if flash[:error] %>
+        <div class="alert alert-danger"><p><%= flash[:error] %></p></div>
+      <% end %>
+      <% unless @no_page_title %>
+        <h1 id="title"><%= @page_title %></h1>
+      <% end %>
+
+      <%== yield %>
+    </div>
+  </body>
+</html>
