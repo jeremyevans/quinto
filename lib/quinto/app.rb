@@ -29,6 +29,7 @@ module Quinto
 
     plugin :rodauth do
       enable :login, :logout, :create_account, :change_password, :change_login, :remember
+      db DB
       prefix "auth"
       accounts_table :players
       account_password_hash_column :hash
