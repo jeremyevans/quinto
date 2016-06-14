@@ -17,10 +17,15 @@ GEM
     rack (1.6.2)
     rack-test (0.6.3)
       rack (>= 1.0)
+    rack_csrf (2.5.0)
+      rack (>= 1.1.0)
     raindrops (0.15.0)
-    roda (2.13.0)
+    roda (2.15.0)
       rack
-    sequel (4.33.0)
+    rodauth (1.0.0)
+      roda (>= 2.6.0)
+      sequel (>= 4)
+    sequel (4.35.0)
     sequel_pg (1.6.17)
       pg (>= 0.8.0)
       sequel (>= 4.0.0)
@@ -39,7 +44,9 @@ DEPENDENCIES
   minitest (>= 5.7.0)
   minitest-hooks
   pg
+  rack_csrf
   roda
+  rodauth
   sequel
   sequel_pg
   unicorn
