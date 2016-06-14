@@ -71,7 +71,7 @@ module Quinto
         raise Error, "User not found"
       end
 
-      new(id[:id], email, '')
+      new(id[:id], email)
     end
   end
 
