@@ -9,7 +9,7 @@ task 'web-spec' do
   ENV['PORT'] ||= '3001'
   ENV['DATABASE_URL'] ||= "postgres:///quinto_test?user=quinto"
 
-  sh "psql -U quinto -f clean.sql \"quinto_test\""
+  sh "psql -U quinto -f sql/clean.sql \"quinto_test\""
   Process.spawn("#{ENV['UNICORN']||'unicorn'} -p #{ENV['PORT']} -D -c spec/unicorn.conf")
   begin
     sleep 1

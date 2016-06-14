@@ -28,24 +28,28 @@ module Quinto
     end
 
     plugin :rodauth do
-      enable :login, :logout, :create_account
+      enable :login, :logout, :create_account, :change_password, :change_login, :remember
       prefix "auth"
       accounts_table :players
       account_password_hash_column :hash
       require_email_address_logins? false
-      set_new_account_password do |_|
-        super(_)
-        account[:token] = '1'
-      end
       update_session do
         super()
         session[:email] = account[:email]
       end
+      after_change_login{session[:email] = DB[:players].where(:id=>session_value).get(:email)}
       logout_redirect '/auth/login'
+
+      after_login{remember_login}
+      after_create_account{remember_login}
+      remember_cookie_options :httponly=>true, :path=>'/'
+      extend_remember_deadline? true
+      remember_period :days=>365
     end
 
     route do |r|
       r.public
+      rodauth.load_memory
 
       r.on "auth" do
         r.rodauth

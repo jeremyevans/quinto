@@ -17,20 +17,10 @@ module Quinto
     h
   end
 
-  PlayerInsert = DB[:players].prepare(:insert, :player_insert, ps_hash.call(%w"email hash token"))
+  PlayerInsert = DB[:players].prepare(:insert, :player_insert, ps_hash.call(%w"email hash"))
   GameInsert = DB[:games].prepare(:insert, :games_insert, {})
   GamePlayerInsert = DB[:game_players].prepare(:insert, :game_player_insert, ps_hash.call(%w"game_id player_id position"))
   GameStateInsert = DB[:game_states].prepare(:insert, :game_state_insert, ps_hash.call(%w"game_id move_count to_move tiles board last_move pass_count game_over racks scores"))
-
-  PlayerFromIdToken = DB[:players].
-    select(:email).
-    where(:id=>:$id, :token=>:$token).
-    prepare(:first, :player_from_id_token)
-
-  PlayerFromLogin = DB[:players].
-    select(:id, :hash, :token).
-    where(:email=>:$email).
-    prepare(:first, :player_from_login)
 
   PlayerFromEmail = DB[:players].
     select(:id).
@@ -76,28 +66,6 @@ module Quinto
   TOKEN_LENGTH = 16
 
   class << Player
-    def register(email, password)
-      hash = BCrypt::Password.create(password)
-      token = SecureRandom.base64(TOKEN_LENGTH)
-      id = PlayerInsert.call(:email=>email, :hash=>hash, :token=>token)
-      new(id, email, token)
-    end
-
-    def from_login(email, password)
-      row = PlayerFromLogin.call(:email=>email)
-      unless BCrypt::Password.new(row[:hash]) == password
-        raise Error, "User not found or password doesn't match"
-      end
-      new(row[:id], email, row[:token])
-    end
-
-    def from_id_token(id, token)
-      unless email = PlayerFromIdToken.call(:id=>id, :token=>token)
-        raise Error, "User not found or token doesn't match"
-      end
-      new(id, email[:email], token)
-    end
-
     def from_email(email)
       unless id = PlayerFromEmail.call(:email=>email)
         raise Error, "User not found"
@@ -127,7 +95,7 @@ module Quinto
     end
 
     def from_id_player(game_id, player_id)
-      new(game_id, GameFromIdPlayer.call(:game_id=>game_id, :player_id=>player_id).map{|row| Player.new(row[:id], row[:email], '')})
+      new(game_id, GameFromIdPlayer.call(:game_id=>game_id, :player_id=>player_id).map{|row| Player.new(row[:id], row[:email])})
     end
 
     def still_at_move(game_id, move_count)

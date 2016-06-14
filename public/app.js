@@ -331,9 +331,8 @@
   window.GameState = GameState;
 
   Player = (function() {
-    function Player(email, token) {
+    function Player(email) {
       this.email = email;
-      this.token = token;
       if (!this.email) {
         throw "player must have an email";
       }
