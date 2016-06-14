@@ -9,6 +9,9 @@ require 'minitest/autorun'
 Capybara.current_driver = :webkit
 Capybara.default_selector = :css
 Capybara.server_port = ENV['PORT'].to_i
+Capybara::Webkit.configure do |config|
+  config.block_unknown_urls
+end
 
 describe 'Quinto Site' do
   include Capybara::DSL
@@ -21,16 +24,12 @@ describe 'Quinto Site' do
     Capybara.reset_sessions!
   end
 
-  def home
-    visit('http://127.0.0.1:3001/')
-  end
-
   def login(email, pass)
-    click_link 'Logout'
-    click_link "Login"
-    fill_in('email', :with=>email)
-    fill_in('password', :with=>pass)
+    page.html.include?('Logout') ? click_button('Logout') : click_link('Login')
+    fill_in('Login', :with=>email)
+    fill_in('Password', :with=>pass)
     click_button 'Login'
+    page.html.must_match /You have been logged in/
   end
 
   def login_foo
@@ -43,15 +42,13 @@ describe 'Quinto Site' do
 
   def join_game(user)
     send(:"login_#{user}")
-    click_link 'Join Game'
-    wait
     click_button 'Join Game'
   end
 
   def wait
-    while page.evaluate_script("$('#spinner h2').css('display') == 'block'") do
+    print '.'
+    while page.evaluate_script("$('#spinner h2').css('display') == 'inline-block'") do
       sleep 0.1
-      print '.'
     end
     sleep 0.3
   end
@@ -66,59 +63,56 @@ describe 'Quinto Site' do
   end
 
   it "should work as expected" do
-    # Rules
-    home
-    page.html.wont_match /How to Play Quinto/
-    click_link 'Rules'
+    visit('http://127.0.0.1:3001/')
     page.html.must_match /How to Play Quinto/
 
     # Registering User #1
-    home
-    click_link "Register"
-    fill_in('email', :with=>'foo@bar.com')
-    fill_in('password', :with=>'foobar')
-    click_button 'Register'
+    click_link "Create Account"
+    fill_in('Login', :with=>'foo@bar.com')
+    fill_in('Confirm Login', :with=>'foo@bar.com')
+    fill_in('Password', :with=>'foobar')
+    fill_in('Confirm Password', :with=>'foobar')
+    click_button 'Create Account'
     h = page.html
     h.must_match /Start New Game/
-    h.must_match /Join Game/
-    h.must_match /Thanks for logging in, foo@bar.com/
+    h.wont_match /Join Game/
+    h.must_match /Your account has been created/
 
     # Registering User #2
-    home
-    click_link "Register"
-    fill_in('email', :with=>'bar@foo.com')
-    fill_in('password', :with=>'barfoo')
-    click_button 'Register'
+    click_button 'Logout' 
+    click_link "Create Account"
+    fill_in('Login', :with=>'bar@foo.com')
+    fill_in('Confirm Login', :with=>'bar@foo.com')
+    fill_in('Password', :with=>'barfoo')
+    fill_in('Confirm Password', :with=>'barfoo')
+    click_button 'Create Account'
     h = page.html
     h.must_match /Start New Game/
-    h.must_match /Join Game/
-    h.must_match /Thanks for logging in, bar@foo.com/
+    h.wont_match /Join Game/
+    h.must_match /Your account has been created/
 
     # Test starting game with same email fails
-    click_link 'Start New Game'
     fill_in('emails', :with=>'bar@foo.com:[3,4,4,8,10,2,2,3,4,10,7,9,5,8,6,8,8,7,2,4,6,1,7,2,1,7,9,9,7,6,4,3,5,5,10,8,4,8,8,9,6,1,5,1,9,3,10,7,8,8,4,7,6,7,4,8,1,4,7,5,10,7,3,9,10,7,3,6,2,7,10,9,4,6,5,6,3,9,8,9,8,9,7,6,2,9,1,7,9,6]')
     click_button 'Start New Game'
     page.html.must_match /cannot have same player in two separate positions/
 
     # Test starting game right after registering
+    visit('http://127.0.0.1:3001/')
     login_bar
-    click_link 'Start New Game'
     fill_in('emails', :with=>'foo@bar.com:[3,4,4,8,10,2,2,3,4,10,7,9,5,8,6,8,8,7,2,4,6,1,7,2,1,7,9,9,7,6,4,3,5,5,10,8,4,8,8,9,6,1,5,1,9,3,10,7,8,8,4,7,6,7,4,8,1,4,7,5,10,7,3,9,10,7,3,6,2,7,10,9,4,6,5,6,3,9,8,9,8,9,7,6,2,9,1,7,9,6]')
     click_button 'Start New Game'
-    page.html.must_match /Your Turn!/
+    page.html.must_match /Pass/
 
     # Test passing
     click_button 'Pass'
-    page.html.must_match /foo@bar.com's Turn/
+    page.html.wont_match /Pass/
 
     # Test leaving and reentering game
-    click_link 'Leave Game'
-    click_link 'Join Game'
-    wait
+    click_link 'Quinto'
     page.html =~ /(\d+) - foo@bar.com/
     game_id = $1.to_i
     click_button 'Join Game'
-    page.html.must_match /foo@bar.com's Turn/
+    page.html.wont_match /Pass/
 
     # Test dragging and dropping tiles
     join_game(:foo)
@@ -241,14 +235,13 @@ describe 'Quinto Site' do
 
     # Logging in and starting new game
     login_foo
-    click_link 'Start New Game'
     fill_in('emails', :with=>'bar@foo.com:[3,4,4,8,10,2,2,3,4,10,7,9,5,8,6,8,8,7,2,4,6,1,7,2,1,7,9,9,7,6,4,3,5,5,10,8,4,8,8,9,6,1,5,1,9,3,10,7,8,8,4,7,6,7,4,8,1,4,7,5,10,7,3,9,10,7,3,6,2,7,10,9,4,6,5,6,3,9,8,9,8,9,7,6,2,9,1,7,9,6]')
     click_button 'Start New Game'
-    page.html.must_match /Your Turn!/
+    page.html.must_match /Pass/
 
     # Logging in and joining game
     join_game(:bar)
-    page.html.must_match /foo@bar.com's Turn/
+    page.html.wont_match /Pass/
 
     # Make moves
     join_game(:foo)
@@ -521,9 +514,7 @@ describe 'Quinto Site' do
 
     page.html.must_match /Winners: foo@bar.com/
 
-    click_link 'Leave Game'
-    click_link 'Join Game'
-    wait
+    click_link 'Quinto'
     page.html.must_match /#{game_id} - foo@bar.com/
     page.html.wont_match /#{game_id+1} - foo@bar.com/
   end
