@@ -37,7 +37,8 @@ module Quinto
         super(_)
         account[:token] = '1'
       end
-      after_login do
+      update_session do
+        super()
         session[:email] = account[:email]
       end
       logout_redirect '/auth/login'
