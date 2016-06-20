@@ -1,4 +1,5 @@
 require 'roda'
+require 'tilt/erubis'
 require_relative 'game'
 require_relative 'db'
 
