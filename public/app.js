@@ -4,9 +4,9 @@
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty;
 
-  actionHandler = {};
+  var actionHandler = {};
 
-  jQuery.fn.serializeObject = function() {
+  $.fn.serializeObject = function() {
     var arrayData, objectData;
     arrayData = this.serializeArray();
     objectData = {};
@@ -30,7 +30,9 @@
   };
 
   escape = function(s) {
-    return $('<div/>').text(s).html();
+    var div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
   };
 
   request = function(path, f, opts) {
@@ -47,12 +49,13 @@
     opts.data = f ? f() : {};
     opts.timeout = 600000;
     if (!opts.no_spinner) {
-      $('#spinner').css('display', 'inline-block');
+      el = document.getElementById('spinner');
+      el.style.display = 'inline-block';
     }
     if (!opts.error) {
       opts.error = function(data) {
-        $('#spinner').css('display', 'none');
-        return $('#current_move').html("<h2>Server Error: " + data.responseText + "</h2>");
+        document.getElementById('spinner').style.display = 'none';
+        return document.getElementById('current_move').innerHTML = "<h2>Server Error: " + data.responseText + "</h2>";
       };
     }
     $.ajax(opts);
@@ -82,7 +85,7 @@
 
   handleActions = function(actions) {
     var a, _i, _len, _results;
-    $('#spinner').css('display', 'none');
+    document.getElementById('spinner').style.display = 'none';
     _results = [];
     for (_i = 0, _len = actions.length; _i < _len; _i++) {
       a = actions[_i];
@@ -152,8 +155,8 @@
       board_html += "</tr>";
     }
     board_html += "</table>";
-    $('#board').html(board_html);
-    $('#scores').html("<table class='table'><caption>Scores</caption><tbody>" + (((function() {
+    document.getElementById('board').innerHTML = board_html;
+    document.getElementById('scores').innerHTML = ("<table class='table'><caption>Scores</caption><tbody>" + (((function() {
       var _k, _len, _ref3, _results;
       _ref3 = window.game.players;
       _results = [];
@@ -164,35 +167,40 @@
       return _results;
     })()).join('')) + "</tbody></table>");
     if (!window.gameOver) {
-      $('#rack').html("<div id='tile_holder'>" + (((function() {
+      document.getElementById('rack').innerHTML = ("<div id='tile_holder'>" + (((function() {
         var _k, _len, _ref3, _results;
         _ref3 = gs.rack;
         _results = [];
         for (i = _k = 0, _len = _ref3.length; _k < _len; i = ++_k) {
           x = _ref3[i];
-          _results.push("<div class='rack_tile' id='rack" + i + "'>" + x + "</div>");
+          _results.push("<div class='rack_tile' draggable='true' id='rack" + i + "'>" + x + "</div>");
         }
         return _results;
       })()).join('')) + "</div><h2>Your Tile Rack</h2>");
-      $('#current_move').html('');
+      document.getElementById('current_move').innerHTML = '';
       if (myTurn()) {
-        $('.rack_tile').draggable({
-          cursor: 'move',
-          helper: 'clone'
-        });
-        $('.board_tile').droppable({
-          drop: droppedTile
-        });
+        var tiles = document.getElementsByClassName('board_tile');
+        for (i = 0; i < tiles.length; i++) {
+          tiles[i].ondragover = function(ev){ ev.preventDefault();};
+          tiles[i].ondrop = droppedTile;
+        }
+        tiles = document.getElementsByClassName('rack_tile');
+        for (i = 0; i < tiles.length; i++) {
+          tiles[i].ondragstart = function(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+          };
+        }
         return checkMove();
       }
     }
   };
 
-  droppedTile = function(e, ui) {
+  droppedTile = function(ev) {
     var b, b2, r, r2;
-    b = $(this);
+    ev.preventDefault();
+    b = $(ev.target);
     if (!b.hasClass('fixed')) {
-      r = ui.draggable;
+      r = $(document.getElementById(ev.dataTransfer.getData("text")));
       $('.current').removeClass('current');
       b.addClass('current');
       r.addClass('current');
@@ -211,8 +219,9 @@
 
   actionHandler.gameOver = function(a) {
     window.gameOver = true;
-    $('#to_move, #rack').html('');
-    return $('#current_move').html("<h2>Game Over!</h2><h2>Winners: " + (a.winners.join(', ')) + "</h2>");
+    document.getElementById('to_move').innerHTML = '';
+    document.getElementById('rack').innerHTML = '';
+    return document.getElementById('current_move').innerHTML = "<h2>Game Over!</h2><h2>Winners: " + (a.winners.join(', ')) + "</h2>";
   };
 
   selectTile = function(e) {
@@ -241,7 +250,7 @@
         t.removeClass('move');
       }
       t.addClass('current');
-      $("#current_move").html('');
+      document.getElementById("current_move").innerHTML = '';
       return processTiles();
     }
   };
@@ -284,7 +293,7 @@
     if (move) {
       try {
         changes = gs.checkMove(move, gs.board, gs.rack);
-        $('#current_move').html("<table class='table'><caption>Move Score: " + changes.score + "</caption><tbody>" + (((function() {
+        document.getElementById('current_move').innerHTML = ("<table class='table'><caption>Move Score: " + changes.score + "</caption><tbody>" + (((function() {
           var _ref, _results;
           _ref = changes.lastRuns;
           _results = [];
@@ -297,15 +306,15 @@
         return $('#commit_move').click(sendMove);
       } catch (_error) {
         error = _error;
-        return $("#current_move").html("<h2>" + error + "</h2>");
+        return document.getElementById("current_move").innerHTML = "<h2>" + error + "</h2>";
       }
     } else {
-      $('#current_move').html("<button type='button' class='btn btn-primary' id='pass'>Pass" + (gs.passCount === window.game.players.length - 1 ? ' and End Game' : '') + "</button>");
+      document.getElementById('current_move').innerHTML = "<button type='button' class='btn btn-primary' id='pass'>Pass" + (gs.passCount === window.game.players.length - 1 ? ' and End Game' : '') + "</button>";
       return $('#pass').click(sendPass);
     }
   };
 
-  $(document).ready(function() {
+  $(function() {
     $(document).on('click', '.board_tile', '.board_tile', selectTile);
     $(document).on('click', '.rack_tile', '.rack_tile', selectTile);
 

@@ -15,11 +15,10 @@
 </div>
 
 <script type="text/javascript" src="/jquery.min.js"></script>
-<script type="text/javascript" src="/jquery-ui.min.js"></script>
-<script type="text/javascript" src="/app.js"></script>
 <script type="text/javascript">
 window.gameId = <%= @game_id %>;
 window.playerPosition = <%= @position %>;
 window.players = <%== @players.to_json %>;
 $.ajaxSetup({headers: {'X-CSRF-TOKEN': "<%= csrf_token %>"}});
 </script>
+<script type="text/javascript" src="/app.js"></script>
