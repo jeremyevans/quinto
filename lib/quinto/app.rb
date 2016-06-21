@@ -3,6 +3,9 @@ require 'tilt/erubis'
 require_relative 'game'
 require_relative 'db'
 
+require 'message_bus'
+MessageBus.configure(:backend=>:memory)
+
 module Quinto
   class App < Roda
     opts[:root] = File.expand_path('../../..', __FILE__)
@@ -17,9 +20,10 @@ module Quinto
     plugin :symbol_matchers
     plugin :json
     plugin :param_matchers
+    plugin :message_bus
 
     plugin :not_found do
-      "Not Found"
+      view(:content=>"<h1>Not Found</h1>")
     end
 
     plugin :error_handler do |e|
@@ -106,6 +110,8 @@ module Quinto
         r.on :d do |game_id|
           game_id = game_id.to_i
 
+          r.message_bus
+
           r.get true do
             game_state = game_state_from_request(game_id)
             @players = game_state.game.player_emails
@@ -114,13 +120,9 @@ module Quinto
             :board
           end
 
-          r.get "check", :move_count do |move_count|
-            if Game.still_at_move(game_id, move_count)
-              [poll_json(move_count)]
-            else
-              game_state = game_state_from_request(game_id)
-              update_actions_json(game_state)
-            end
+          r.get "check" do |move_count|
+            game_state = game_state_from_request(game_id)
+            update_actions_json(game_state)
           end
 
           r.post "pass" do
@@ -153,7 +155,7 @@ module Quinto
     end
 
     def poll_json(move_count)
-      {"action"=>"poll", "poll"=>"/check/#{move_count}"}
+      {"action"=>"poll"}
     end
 
     def game_state_from_request(game_id)
@@ -178,6 +180,7 @@ module Quinto
       game_state = yield(game_state)
       game_state.persist
 
+      MessageBus.publish("/game/#{game_id}", 'null')
       update_actions_json(game_state)
     end
   end
