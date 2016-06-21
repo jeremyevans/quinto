@@ -116,35 +116,49 @@ describe 'Quinto Site' do
 
     # Test dragging and dropping tiles
     join_game(:foo)
-    page.find_by_id('rack4').drag_to(page.find_by_id('i8'))
+    #page.find_by_id('rack4').drag_to(page.find_by_id('i8'))
+    click("#i8")
+    click("#rack4")
     page.find('#i8').text.must_equal '10'
     click_button 'Commit Move'
 
     # Test dragging and dropping same rack tile twice
     # removes previous place
     join_game(:bar)
-    page.find_by_id('rack4').drag_to(page.find_by_id('j8'))
+    #page.find_by_id('rack4').drag_to(page.find_by_id('j8'))
+    click("#j8")
+    click("#rack4")
     page.find('#h8').text.must_equal ''
     page.find('#j8').text.must_equal '10'
-    page.find_by_id('rack4').drag_to(page.find_by_id('h8'))
+    #page.find_by_id('rack4').drag_to(page.find_by_id('h8'))
+    click("#h8")
+    click("#rack4")
     page.find('#h8').text.must_equal '10'
     page.find('#j8').text.must_equal ''
 
     # Test dragging and dropping different rack tile to same
     # board tile removes previous place
     join_game(:bar)
-    page.find_by_id('rack4').drag_to(page.find_by_id('j8'))
+    #page.find_by_id('rack4').drag_to(page.find_by_id('j8'))
+    click("#j8")
+    click("#rack4")
     page.find('#j8').text.must_equal '10'
-    page.find_by_id('rack3').drag_to(page.find_by_id('j8'))
+    #page.find_by_id('rack3').drag_to(page.find_by_id('j8'))
+    click("#j8")
+    click("#rack3")
     page.find('#j8').text.must_equal '8'
-    page.find_by_id('rack4').drag_to(page.find_by_id('h8'))
+    #page.find_by_id('rack4').drag_to(page.find_by_id('h8'))
+    click("#h8")
+    click("#rack4")
     page.find('#h8').text.must_equal '10'
     page.find('#j8').text.must_equal '8'
 
     # Test nothing happens if you drop rack tile over
     # previously played tile
     join_game(:bar)
-    page.find_by_id('rack3').drag_to(page.find_by_id('i8'))
+    #page.find_by_id('rack3').drag_to(page.find_by_id('i8'))
+    click("#rack3")
+    click("#i8")
     page.find('#i8').text.must_equal '10'
 
     # Test clicking on board then rack
