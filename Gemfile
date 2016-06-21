@@ -4,6 +4,7 @@ ruby "2.3.1"
 gem 'sequel'
 gem 'roda'
 gem 'rodauth'
+gem 'roda-message_bus'
 gem 'rack_csrf'
 gem 'bcrypt'
 gem 'pg'
