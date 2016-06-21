@@ -1,8 +1,9 @@
 <% @no_page_title = true %>
 
-<div class="row">
+<div class="row" id="game-info" data-gameId="<%= @game_id %>" data-playerPosition="<%= @position %>" data-players="<%= @players.to_json %>" data-token="<%= csrf_token %>">
   <div class="col-md-4">
-    <h1 id="title"><%= @page_title = "Game #{@game_id}: VS #{(@players - [player.email]).join(', ')}" %></a> <div id="spinner"><img src="/spinner.gif"/></div></h1>
+    <h1 id="title"><%= @page_title = "Game #{@game_id}: VS #{(@players - [player.email]).join(', ')}" %></h1>
+    <div id="spinner"><img src="/spinner.gif"/></div>
     <h2 id="to_move"></h2>
     <div id="scores"></div>
     <div id="current_move"></div>
@@ -15,10 +16,4 @@
 </div>
 
 <script type="text/javascript" src="/jquery.min.js"></script>
-<script type="text/javascript">
-window.gameId = <%= @game_id %>;
-window.playerPosition = <%= @position %>;
-window.players = <%== @players.to_json %>;
-$.ajaxSetup({headers: {'X-CSRF-TOKEN': "<%= csrf_token %>"}});
-</script>
 <script type="text/javascript" src="/app.js"></script>

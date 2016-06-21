@@ -5,6 +5,13 @@
     __hasProp = {}.hasOwnProperty;
 
   var actionHandler = {};
+  var game_info = document.getElementById("game-info");
+  var gameId = parseInt(game_info.getAttribute('data-gameId'));
+  var playerPosition = parseInt(game_info.getAttribute('data-playerPosition'));
+  var players = JSON.parse(game_info.getAttribute('data-players'));
+  var token = game_info.getAttribute('data-token');
+  var gameOver = false;
+  $.ajaxSetup({headers: {'X-CSRF-TOKEN': token}});
 
   $.fn.serializeObject = function() {
     var arrayData, objectData;
@@ -49,12 +56,11 @@
     opts.data = f ? f() : {};
     opts.timeout = 600000;
     if (!opts.no_spinner) {
-      el = document.getElementById('spinner');
-      el.style.display = 'inline-block';
+      document.getElementById('spinner').style.visibility = 'visible';
     }
     if (!opts.error) {
       opts.error = function(data) {
-        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('spinner').style.visibility = 'hidden';
         return document.getElementById('current_move').innerHTML = "<h2>Server Error: " + data.responseText + "</h2>";
       };
     }
@@ -80,12 +86,12 @@
   };
 
   gameState = function() {
-    return window.game.state();
+    return game.state();
   };
 
   handleActions = function(actions) {
     var a, _i, _len, _results;
-    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('spinner').style.visibility = 'hidden';
     _results = [];
     for (_i = 0, _len = actions.length; _i < _len; _i++) {
       a = actions[_i];
@@ -118,7 +124,7 @@
   };
 
   myTurn = function() {
-    return window.playerPosition === gameState().toMove;
+    return playerPosition === gameState().toMove;
   };
 
   actionHandler.updateInfo = function(a) {
@@ -133,7 +139,7 @@
     board = gs.board;
     tp = gs.translatePos;
     board_html = "<table>";
-    var to_move = window.game.players[gs.toMove].email;
+    var to_move = game.players[gs.toMove].email;
     for (y = _i = 0, _ref1 = Game.boardY; 0 <= _ref1 ? _i < _ref1 : _i > _ref1; y = 0 <= _ref1 ? ++_i : --_i) {
       board_html += "<tr>";
       for (x = _j = 0, _ref2 = Game.boardX; 0 <= _ref2 ? _j < _ref2 : _j > _ref2; x = 0 <= _ref2 ? ++_j : --_j) {
@@ -158,15 +164,15 @@
     document.getElementById('board').innerHTML = board_html;
     document.getElementById('scores').innerHTML = ("<table class='table'><caption>Scores</caption><tbody>" + (((function() {
       var _k, _len, _ref3, _results;
-      _ref3 = window.game.players;
+      _ref3 = game.players;
       _results = [];
       for (i = _k = 0, _len = _ref3.length; _k < _len; i = ++_k) {
         p = _ref3[i];
-        _results.push("<tr><td" + (to_move == p.email ? ' class="to_move"' : '') + ">" + (i === window.playerPosition ? 'You' : escape(p.email)) + "</td><td>" + gs.scores[i] + "</td></tr>");
+        _results.push("<tr><td" + (to_move == p.email ? ' class="to_move"' : '') + ">" + (i === playerPosition ? 'You' : escape(p.email)) + "</td><td>" + gs.scores[i] + "</td></tr>");
       }
       return _results;
     })()).join('')) + "</tbody></table>");
-    if (!window.gameOver) {
+    if (!gameOver) {
       document.getElementById('rack').innerHTML = ("<div id='tile_holder'>" + (((function() {
         var _k, _len, _ref3, _results;
         _ref3 = gs.rack;
@@ -218,7 +224,7 @@
   };
 
   actionHandler.gameOver = function(a) {
-    window.gameOver = true;
+    gameOver = true;
     document.getElementById('to_move').innerHTML = '';
     document.getElementById('rack').innerHTML = '';
     return document.getElementById('current_move').innerHTML = "<h2>Game Over!</h2><h2>Winners: " + (a.winners.join(', ')) + "</h2>";
@@ -309,7 +315,7 @@
         return document.getElementById("current_move").innerHTML = "<h2>" + error + "</h2>";
       }
     } else {
-      document.getElementById('current_move').innerHTML = "<button type='button' class='btn btn-primary' id='pass'>Pass" + (gs.passCount === window.game.players.length - 1 ? ' and End Game' : '') + "</button>";
+      document.getElementById('current_move').innerHTML = "<button type='button' class='btn btn-primary' id='pass'>Pass" + (gs.passCount === game.players.length - 1 ? ' and End Game' : '') + "</button>";
       return $('#pass').click(sendPass);
     }
   };
@@ -319,9 +325,9 @@
     $(document).on('click', '.rack_tile', '.rack_tile', selectTile);
 
     var p;
-    window.game = new Game((function() {
+    game = new Game((function() {
       var _i, _len, _ref, _results;
-      _ref = window.players;
+      _ref = players;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         p = _ref[_i];
@@ -333,11 +339,11 @@
     request('/check/-1');
   });
 
-  window.Player = Player;
+  Player = Player;
 
-  window.Game = Game;
+  Game = Game;
 
-  window.GameState = GameState;
+  GameState = GameState;
 
   Player = (function() {
     function Player(email) {

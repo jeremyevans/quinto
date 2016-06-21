@@ -25,8 +25,7 @@ table {margin: auto;}
 #rules h2, #rules h3, #rules p {text-align: left;}
 #rules h2.link {text-align: center;}
 
-#spinner {height: 50px;}
-#spinner {display: none;}
+#spinner {height: 50px; text-align: center; visibility: hidden;}
 
 .to_move {font-weight: bold;}
 #commit_move, #pass {display: block; margin: auto;}
