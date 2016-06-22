@@ -1,19 +1,20 @@
-<% unless @games.empty? %>
-  <h2>Join Game</h2>
+<% [[@active_games, "Join Active"], [@finished_games, "View Finished"]].each do |games, heading| %>
+  <% unless games.empty? %>
+    <h2><%= heading %> Game</h2>
 
-  <form action="/game">
-    <%== csrf_tag %>
-    <label for="join_game_select">Game:</label>
-    <select name="id" id="join_game_select">
-      <% @games.each do |text, id| %>
-        <option value="<%= id %>"><%= text %></option>
-      <% end %>
-    </select>
-    <input type="submit" class="btn btn-primary" value="Join Game">
-  </form>
+    <form action="/game">
+      <label for="join_game_select">Game:</label>
+      <select name="id" id="join_game_select">
+        <% games.each do |text, id| %>
+          <option value="<%= id %>"><%= text %></option>
+        <% end %>
+      </select>
+      <input type="submit" class="btn btn-primary" value="Join Game">
+    </form>
+  <% end %>
 <% end %>
 
-<h2>New Game</h2>
+<h2>Start New Game</h2>
 
 <form action="/game/new" method="POST">
   <%== csrf_tag %>

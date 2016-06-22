@@ -67,7 +67,8 @@ module Quinto
 
       r.root do
         if rodauth.logged_in?
-          @games = player.active_games.map{|id, players| ["#{id} - #{players.join(', ')}", id]}
+          @active_games = player.active_games.map{|id, players| ["#{id} - #{players}", id]}
+          @finished_games = player.finished_games.map{|id, players| ["#{id} - #{players}", id]}
           :home
         else
           :index

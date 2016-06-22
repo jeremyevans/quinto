@@ -27,18 +27,25 @@ module Quinto
     where(:email=>:$email).
     prepare(:first, :player_from_email)
 
-  PlayerActiveGames = DB[:players].
-    join(DB[:game_players].
-      where(:game_id=>DB[:game_players].
-        select(:game_id).
-        where(:player_id=>:$id).
-        exclude(:game_id=>DB[:game_states].
+  player_games = lambda do |meth, ps_name|
+    DB[:players].
+      join(DB[:game_players].
+        where(:game_id=>DB[:game_players].
           select(:game_id).
-          where(:game_over=>true))).
-      as(:g),
-      :players__id=>:g__player_id).
-    order(Sequel.desc(:g__game_id), :g__position).
-    prepare(:all, :player_active_games)
+          where(:player_id=>:$id).
+          send(meth, :game_id=>DB[:game_states].
+            select(:game_id).
+            where(:game_over=>true))).
+        as(:g),
+        :players__id=>:g__player_id).
+      order(Sequel.desc(:g__game_id)).
+      exclude(:players__id=>:$id).
+      select_group(:g__game_id).
+      select_append{string_agg(:players__email, Sequel.lit('? ORDER BY g.position', ', ')).as(:emails)}.
+      prepare([:to_hash, :game_id, :emails], ps_name)
+  end
+  PlayerActiveGames = player_games.call(:exclude, :player_active_games)
+  PlayerFinishedGames = player_games.call(:where, :player_finished_games)
 
   GameFromIdPlayer = DB[:players].
     join(:game_players, :players__id=>:game_players__player_id).
@@ -105,12 +112,11 @@ module Quinto
 
   class Player
     def active_games
-      games = {}
-      PlayerActiveGames.call(:id=>id).each do |row|
-        next if row[:player_id] == id
-        (games[row[:game_id]] ||= []) << row[:email]
-      end
-      games
+      PlayerActiveGames.call(:id=>id)
+    end
+
+    def finished_games
+      PlayerFinishedGames.call(:id=>id)
     end
   end
 
