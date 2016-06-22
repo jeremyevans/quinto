@@ -65,11 +65,6 @@ module Quinto
       where(:game_id=>:$game_id)).
     prepare(:first, :current_game_state)
 
-  GameStillAtMove = DB[:game_states].
-    select{Sequel.as({max(:move_count)=>:$move_count}, :still_at_move)}.
-    where(:game_id=>:$game_id).
-    prepare(:first, :game_still_at_move)
-
   TOKEN_LENGTH = 16
 
   class << Player
@@ -103,10 +98,6 @@ module Quinto
 
     def from_id_player(game_id, player_id)
       new(game_id, GameFromIdPlayer.call(:game_id=>game_id, :player_id=>player_id).map{|row| Player.new(row[:id], row[:email])})
-    end
-
-    def still_at_move(game_id, move_count)
-      GameStillAtMove.call(:game_id=>game_id, :move_count=>move_count)[:still_at_move]
     end
   end
 
