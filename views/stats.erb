@@ -1,0 +1,64 @@
+<% @page_title = "Stats Against #{@other_player.email} (#{@stats[:games]} Complete Games)" %>
+
+<div class="stats">
+<table class="stats table">
+  <thead>
+    <tr>
+      <th></th>
+      <th>You</th>
+      <th><%= @other_player.email %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Wins</td>
+      <td><%= @stats[:wins][player.id] %></td>
+      <td><%= @stats[:wins][@other_player.id] %></td>
+    </tr>
+    <tr>
+      <td>Total Score</td>
+      <td><%= @stats[:scores][player.id] %></td>
+      <td><%= @stats[:scores][@other_player.id] %></td>
+    </tr>
+    <tr>
+      <td>Average Score</td>
+      <td><%= '%0.2f' % (@stats[:scores][player.id]/@stats[:games].to_f) %></td>
+      <td><%= '%0.2f' % (@stats[:scores][@other_player.id]/@stats[:games].to_f) %></td>
+    </tr>
+    <tr>
+      <td>Moves</td>
+      <td><%= @stats[:num_moves][player.id] %></td>
+      <td><%= @stats[:num_moves][@other_player.id] %></td>
+    </tr>
+    <tr>
+      <td>Tiles/Move</td>
+      <td><%= '%0.2f' % @stats[:tiles_per_move][player.id] %></td>
+      <td><%= '%0.2f' % @stats[:tiles_per_move][@other_player.id] %></td>
+    </tr>
+  </tbody>
+</table>
+
+<table class="stats table">
+  <thead>
+    <tr>
+      <th>Tile</th>
+      <th>Times You Used</th>
+      <th>Times <%= @other_player.email %> Used</th>
+      <th>% You Used</th>
+      <th>% <%= @other_player.email %> Used</th>
+      <th>% of Plays by You</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% 1.upto(10) do |i| %>
+      <tr>
+        <td><%= i %></td>
+        <td><%= @stats[:number_counts][player.id][i] %></td>
+        <td><%= @stats[:number_counts][@other_player.id][i] %></td>
+        <td><%= '%0.2f' % (@stats[:number_percentages][player.id][i]*100) %></td>
+        <td><%= '%0.2f' % (@stats[:number_percentages][@other_player.id][i]*100) %></td>
+        <td><%= '%0.2f' % (@stats[:number_counts][player.id][i].to_f/(@stats[:number_counts][player.id][i]+@stats[:number_counts][@other_player.id][i])*100) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

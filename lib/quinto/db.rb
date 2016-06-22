@@ -113,6 +113,85 @@ module Quinto
     def finished_games
       PlayerFinishedGames.call(:id=>id)
     end
+
+    def stats(other_player)
+      other_id = other_player.id
+      game_ids = DB[:games].
+        where(:id=>DB[:game_players].where(:player_id=>id).select(:game_id)).
+        where(:id=>DB[:game_players].where(:player_id=>other_id).select(:game_id)).
+        where(:id=>DB[:game_players].select_group(:game_id).having{{count.function.* => 2}}).
+        where(:id=>DB[:game_states].where(:game_over).select(:game_id)).
+        select_map(:id)
+
+      players = DB[:game_players].order(:position).where(:game_id=>game_ids).to_hash_groups(:game_id, :player_id)
+      moves = DB[:game_states].where(:game_id=>game_ids).to_hash_groups(:game_id, [:to_move, :last_move])
+      final_moves = DB[:game_states].where(:game_id=>game_ids).where(:game_over).to_hash(:game_id, :scores)
+
+      player_map = {true=>{id=>other_id, other_id=>id}, false=>{id=>id, other_id=>other_id}}
+      player_tiles = {id=>[], other_id=>[]}
+      players.each do |game_id, player_ids|
+        player_ids.each_with_index do |player_id, i|
+          moves[game_id].each do |other_player, move|
+            if move && !move.empty?
+              player_tiles[player_map[other_player == i][player_id]] << move
+            end
+          end
+        end
+      end
+
+      player_numbers = {}
+      player_tiles.each do |player_id, move_tiles|
+        player_numbers[player_id] = move_tiles.map do |move_tile|
+          move_tile.split.map{|x| x.to_i}
+        end
+      end
+
+      number_counts = {id=>Hash.new(0), other_id=>Hash.new(0)}
+      player_numbers.each do |player_id, moves|
+        moves.flatten.each{|n| number_counts[player_id][n] += 1}
+      end
+
+      # Number of tiles per player
+      player_numbers[id].flatten.length
+      player_numbers[other_id].flatten.length
+
+      # Number of moves per player
+      num_moves = {id=>0, other_id=>0}
+      players.each do |game_id, player_ids|
+        player_ids.each_with_index do |player_id, i|
+          moves[game_id].each do |other_player, move|
+            if move
+              num_moves[player_map[other_player == i][player_id]] += 1
+            end
+          end
+        end
+      end
+
+      tiles_per_move = {}
+      num_moves.each do |player_id, n|
+        tiles_per_move[player_id] = player_numbers[player_id].flatten.length/n.to_f
+      end
+
+      number_percentages = {id=>{}, other_id=>{}}
+      number_counts.each do |player_id, counts|
+        counts.each do |tile, count|
+          number_percentages[player_id][tile] = count.to_f/player_numbers[player_id].flatten.length
+        end
+      end
+
+      wins = {id=>0, other_id=>0}
+      scores = {id=>0, other_id=>0}
+      players.each do |game_id, player_ids|
+        player_ids.each_with_index do |player_id, i|
+          next unless final_moves[game_id]
+          final_scores = JSON.parse(final_moves[game_id])
+          scores[player_id] += final_scores[i]
+          wins[player_id] += 1 if final_scores.max == final_scores[i]
+        end
+      end
+
+      {:games=>game_ids.length, :number_counts=>number_counts, :num_moves=>num_moves, :tiles_per_move=>tiles_per_move, :number_percentages=>number_percentages, :wins=>wins, :scores=>scores}
+    end
   end
 
   class GameState

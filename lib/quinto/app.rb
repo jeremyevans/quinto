@@ -77,6 +77,12 @@ module Quinto
 
       next unless player
 
+      r.get "stats", :param => 'login' do |email|
+        @other_player = Player.from_email(email)
+        @stats = player.stats(@other_player)
+        :stats
+      end
+
       r.on "game" do
         r.is :param => 'id' do |game_id|
           r.redirect "/game/#{game_id.to_i}"
