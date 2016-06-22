@@ -121,9 +121,14 @@ module Quinto
             :board
           end
 
-          r.get "check" do |move_count|
+          r.get "check" do
             game_state = game_state_from_request(game_id)
             update_actions_json(game_state)
+          end
+
+          r.get "state", :d do |move_count|
+            game_state = game_state_from_request(game_id, move_count.to_i)
+            update_actions_json(game_state, :previous=>true)
           end
 
           r.post "pass" do
@@ -139,8 +144,8 @@ module Quinto
 
     attr_reader :player
 
-    UPDATE_ACTIONS_KEYS = {:board=>:board, :scores=>:scores, :to_move=>:toMove, :pass_count=>:passCount, :move_count=>:moveCount}.freeze
-    def update_actions_json(game_state)
+    UPDATE_ACTIONS_KEYS = {:board=>:board, :scores=>:scores, :to_move=>:toMove, :pass_count=>:passCount, :move_count=>:moveCount, :game_over=>:gameOver}.freeze
+    def update_actions_json(game_state, opts={})
       state = {}
       UPDATE_ACTIONS_KEYS.each{|k,v| state[v] = game_state[k]}
       state["rack"] = game_state.racks[game_state.game.player_position(player)]
@@ -151,6 +156,12 @@ module Quinto
       elsif player.id != game_state.player_to_move.id
         json << poll_json(game_state.move_count)
       end
+
+      if opts[:previous]
+        json << {"action"=>"previousState"}
+      else
+        json << {"action"=>"activeState"}
+      end
       
       json
     end
@@ -159,12 +170,12 @@ module Quinto
       {"action"=>"poll"}
     end
 
-    def game_state_from_request(game_id)
+    def game_state_from_request(game_id, move_count=nil)
       unless game = Game.from_id_player(game_id, player.id)
         raise Error, "invalid game for player"
       end
       
-      game.state
+      game.state(move_count)
     end
 
     def move_or_pass(game_id)

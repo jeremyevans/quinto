@@ -29,3 +29,5 @@ table {margin: auto;}
 
 .to_move {font-weight: bold;}
 #commit_move, #pass {display: block; margin: auto;}
+#previous_states {display: none; margin-top: 20px;}
+#move_count, #resume_play {display: none;}

@@ -57,13 +57,17 @@ module Quinto
     order(:game_players__position).
     prepare(:all, :game_from_id_player)
 
-  CurrentGameState = DB[:game_states].
+  game_state_ds = DB[:game_states].
     select(:move_count, :to_move, :tiles, :board, :last_move, :pass_count, :game_over, :racks, :scores).
-    where(:game_id=>:$game_id).
-    where(:move_count=>DB[:game_states].
-      select{max(move_count)}.
-      where(:game_id=>:$game_id)).
+    where(:game_id=>:$game_id)
+
+  CurrentGameState = game_state_ds.
+    reverse(:move_count).
     prepare(:first, :current_game_state)
+
+  GameStateAt = game_state_ds.
+    where(:move_count=>:$move_count).
+    prepare(:first, :game_state_at)
 
   TOKEN_LENGTH = 16
 
@@ -119,9 +123,9 @@ module Quinto
   end
 
   class Game
-    def state
-      unless row = CurrentGameState.call(:game_id=>id)
-        raise Error, "No current game state for game #{id}"
+    def state(move_count=nil)
+      unless row = move_count ? GameStateAt.call(:game_id=>id, :move_count=>move_count) : CurrentGameState.call(:game_id=>id)
+        raise Error, "No matching game state for game #{id}"
       end
 
       GameState.new(self, row[:move_count], row[:to_move], JSON.parse(row[:tiles]), JSON.parse(row[:racks]), JSON.parse(row[:scores]), row[:pass_count], row[:game_over], JSON.parse(row[:board]), row[:last_move])
