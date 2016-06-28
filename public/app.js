@@ -80,7 +80,7 @@
       if (e) {
         e.preventDefault();
       }
-      return request(path, f, {
+      request(path, f, {
         type: 'POST'
       });
     };
@@ -91,22 +91,19 @@
   };
 
   handleActions = function(actions) {
-    var a, _i, _len, _results;
-    _results = [];
-    for (_i = 0, _len = actions.length; _i < _len; _i++) {
-      a = actions[_i];
-      _results.push(handleAction(a));
+    var i, _len;
+    for (i = 0, _len = actions.length; i < _len; i++) {
+      handleAction(actions[i]);
     }
-    return _results;
   };
 
   handleAction = function(a) {
     var f;
     f = actionHandler[a.action];
     if (f) {
-      return f(a);
+      f(a);
     } else {
-      return alert("Unhandled action: " + a.action);
+      alert("Unhandled action: " + a.action);
     }
   };
 
@@ -116,11 +113,9 @@
 
   actionHandler.check = function() {
     MessageBus.unsubscribe(channel, actionHandler.check);
-    return request("/check", null, {
+    request("/check", null, {
       "error": (function() {
-        return setTimeout((function() {
-          return actionHandler.check();
-        }), 60000);
+        setTimeout(actionHandler.check, 60000);
       }),
     });
   };
