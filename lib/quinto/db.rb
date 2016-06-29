@@ -199,6 +199,11 @@ module Quinto
       GameStateInsert.call(:game_id=>game.id, :move_count=>move_count, :to_move=>to_move, :tiles=>tiles.to_json, :board=>board.to_json, :last_move=>last_move, :pass_count=>pass_count, :game_over=>game_over, :racks=>racks.to_json, :scores=>scores.to_json)
       self
     end
+
+    def last_play
+      return [] unless last_move
+      last_move.split.map{|m| m.match(/\A\d+([a-z]\d+)\z/)[1]}
+    end
   end
 
   class Game

@@ -130,9 +130,9 @@
   };
 
   actionHandler.updateInfo = function(a) {
-    var board, board_html, gs, i, k, oldBoard, p, pos, tp, v, value, x, y, _i, _j, _ref, _ref1, _ref2;
+    var board, board_html, lastPlay, gs, i, k, p, pos, tp, v, value, x, y, _i, _j, _ref, _ref1, _ref2;
     gs = gameState();
-    oldBoard = gs.board;
+    lastPlay = a.lastPlay;
     _ref = a.state;
     for (k in _ref) {
       v = _ref[k];
@@ -150,9 +150,6 @@
         board_html += "<td class='board_tile";
         if (value) {
           board_html += ' fixed';
-          if (!oldBoard[pos]) {
-            board_html += ' last';
-          }
         }
         board_html += "' id='" + pos + "'>";
         if (value) {
@@ -164,6 +161,9 @@
     }
     board_html += "</table>";
     document.getElementById('board').innerHTML = board_html;
+    for (i = 0, _len = lastPlay.length; i < _len; i++) {
+      $(document.getElementById(lastPlay[i])).addClass('last');
+    }
     document.getElementById('scores').innerHTML = ("<table class='table'><caption>Scores</caption><tbody>" + (((function() {
       var _k, _len, _ref3, _results;
       _ref3 = game.players;

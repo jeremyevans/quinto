@@ -155,7 +155,7 @@ module Quinto
       state = {}
       UPDATE_ACTIONS_KEYS.each{|k,v| state[v] = game_state[k]}
       state["rack"] = game_state.racks[game_state.game.player_position(player)]
-      json = [{"action"=>"updateInfo", "state"=>state}]
+      json = [{"action"=>"updateInfo", "state"=>state, "lastPlay"=>game_state.last_play}]
 
       if game_state.game_over
         json << {"action"=>"gameOver", "winners"=>game_state.winners}
