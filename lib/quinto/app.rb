@@ -15,7 +15,7 @@ module Quinto
     use Rack::Session::Cookie, :secret=>secret, :key => '_quinto_session'
 
     plugin :public
-    plugin :render, :escape=>true
+    plugin :render, :escape=>:erubi
     plugin :symbol_views
     plugin :symbol_matchers
     plugin :json
