@@ -85,8 +85,8 @@ describe GameState do
     @s.game.players[0].email.must_equal 'bar@baz.com'
     @s.board.must_equal({})
     @s.scores.must_equal [0, 0]
-    @s.last_move.must_equal nil
-    #@s.last_runs.must_equal nil
+    @s.last_move.must_be_nil
+    #@s.last_runs.must_be_nil
     @s.pass_count.must_equal 0
     @s.move_count.must_equal 0
     @s.game_over.must_equal false
@@ -102,8 +102,8 @@ describe GameState do
     s.game.players[0].email.must_equal 'bar@baz.com'
     s.board.must_equal({})
     s.scores.must_equal [0, 0]
-    s.last_move.must_equal nil
-    #s.last_runs.must_equal nil
+    s.last_move.must_be_nil
+    #s.last_runs.must_be_nil
     s.pass_count.must_equal 1
     s.move_count.must_equal 1
     s.game_over.must_equal false
