@@ -38,24 +38,24 @@ module Quinto
             select(:game_id).
             where(:game_over=>true))).
         as(:g),
-        :players__id=>:g__player_id).
-      order(Sequel.desc(:g__game_id)).
-      exclude(:players__id=>:$id).
-      select_group(:g__game_id).
-      select_append{string_agg(:players__email, Sequel.lit('? ORDER BY g.position', ', ')).as(:emails)}.
+        Sequel[:players][:id]=>Sequel[:g][:player_id]).
+      order(Sequel.desc(Sequel[:g][:game_id])).
+      exclude(Sequel[:players][:id]=>:$id).
+      select_group(Sequel[:g][:game_id]).
+      select_append{string_agg(Sequel[:players][:email], ', ').order(Sequel[:g][:position]).as(:emails)}.
       prepare([:to_hash, :game_id, :emails], ps_name)
   end
   PlayerActiveGames = player_games.call(:exclude, :player_active_games)
   PlayerFinishedGames = player_games.call(:where, :player_finished_games)
 
   GameFromIdPlayer = DB[:players].
-    join(:game_players, :players__id=>:game_players__player_id).
-    select(:players__id, :players__email).
-    where(:game_players__game_id=>:$game_id).
-    where(:game_players__game_id=>DB[:game_players].
+    join(:game_players, Sequel[:players][:id]=>Sequel[:game_players][:player_id]).
+    select(Sequel[:players][:id], Sequel[:players][:email]).
+    where(Sequel[:game_players][:game_id]=>:$game_id).
+    where(Sequel[:game_players][:game_id]=>DB[:game_players].
       select(:game_id).
       where(:player_id=>:$player_id)).
-    order(:game_players__position).
+    order(Sequel[:game_players][:position]).
     prepare(:all, :game_from_id_player)
 
   game_state_ds = DB[:game_states].
