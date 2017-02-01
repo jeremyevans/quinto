@@ -9,6 +9,10 @@ MessageBus.configure(:backend=>:memory)
 module Quinto
   class App < Roda
     opts[:root] = File.expand_path('../../..', __FILE__)
+    opts[:unsupported_block_result] = :raise
+    opts[:unsupported_matcher] = :raise
+    opts[:verbatim_string_matcher] = true
+
     TEST_MODE = ENV['QUINTO_TEST'] == '1'
 
     secret = ENV['QUINTO_SESSION_SECRET'] || SecureRandom.random_bytes(30)
