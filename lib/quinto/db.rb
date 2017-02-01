@@ -8,7 +8,8 @@ module Quinto
   DB = Sequel.connect(ENV['QUINTO_DATABASE_URL'] || ENV['DATABASE_URL'], :identifier_mangling=>false)
   DB.extension :freeze_datasets
   require 'logger'
-  DB.loggers << Logger.new($stdout)
+  #DB.loggers << Logger.new($stdout)
+  DB.freeze
 
   ps_hash = lambda do |keys|
     h = {}
