@@ -21,7 +21,6 @@ module Quinto
     plugin :public
     plugin :render, :escape=>:erubi
     plugin :symbol_views
-    plugin :symbol_matchers
     plugin :json
     plugin :param_matchers
     plugin :message_bus
@@ -118,9 +117,7 @@ module Quinto
           r.redirect("/game/#{game_state.game.id}")
         end
 
-        r.on :d do |game_id|
-          game_id = game_id.to_i
-
+        r.on Integer do |game_id|
           r.message_bus
 
           r.get true do
@@ -136,8 +133,8 @@ module Quinto
             update_actions_json(game_state)
           end
 
-          r.get "state", :d do |move_count|
-            game_state = game_state_from_request(game_id, move_count.to_i)
+          r.get "state", Integer do |move_count|
+            game_state = game_state_from_request(game_id, move_count)
             update_actions_json(game_state, :previous=>true)
           end
 
