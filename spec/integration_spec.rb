@@ -530,6 +530,7 @@ describe 'Quinto Site' do
 
     click_link 'Quinto'
     page.html.must_match /#{game_id} - foo@bar.com/
-    page.html.wont_match /#{game_id+1} - foo@bar.com/
+    page.html.must_match /#{game_id+1} - foo@bar.com/
+    page.html.wont_match /#{game_id+2} - foo@bar.com/
   end
 end
