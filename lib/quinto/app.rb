@@ -9,9 +9,6 @@ MessageBus.configure(:backend=>:memory)
 module Quinto
   class App < Roda
     opts[:root] = File.expand_path('../../..', __FILE__)
-    opts[:unsupported_block_result] = :raise
-    opts[:unsupported_matcher] = :raise
-    opts[:verbatim_string_matcher] = true
 
     TEST_MODE = ENV['QUINTO_TEST'] == '1'
 
@@ -19,7 +16,7 @@ module Quinto
     use Rack::Session::Cookie, :secret=>secret, :key => '_quinto_session'
 
     plugin :public
-    plugin :render, :escape=>:erubi
+    plugin :render, :escape=>true
     plugin :symbol_views
     plugin :json
     plugin :param_matchers

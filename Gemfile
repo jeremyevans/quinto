@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
-gem 'sequel'
-gem 'roda', '>=2.27.0'
+gem 'sequel', '>= 5'
+gem 'roda', '>= 3'
 gem 'rodauth'
 gem 'roda-message_bus'
 gem 'rack_csrf'

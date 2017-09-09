@@ -5,8 +5,8 @@ require 'bcrypt'
 require 'securerandom'
 
 module Quinto
-  DB = Sequel.connect(ENV['QUINTO_DATABASE_URL'] || ENV['DATABASE_URL'], :identifier_mangling=>false)
-  DB.extension :freeze_datasets, :date_arithmetic
+  DB = Sequel.connect(ENV['QUINTO_DATABASE_URL'] || ENV['DATABASE_URL'])
+  DB.extension :date_arithmetic
   require 'logger'
   #DB.loggers << Logger.new($stdout)
   DB.freeze
