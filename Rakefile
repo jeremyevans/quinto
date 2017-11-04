@@ -5,9 +5,11 @@ end
 
 desc 'Run server integration tests'
 task 'web-spec' do
+  require 'securerandom'
   ENV['QUINTO_TEST'] = '1'
   ENV['PORT'] ||= '3001'
   ENV['DATABASE_URL'] ||= "postgres:///quinto_test?user=quinto"
+  ENV['QUINTO_SESSION_SECRET'] ||= SecureRandom.hex(30)
 
   sh "psql -U quinto -f sql/clean.sql \"quinto_test\""
   Process.spawn("#{ENV['UNICORN']||'unicorn'} -p #{ENV['PORT']} -D -c spec/unicorn.conf")
