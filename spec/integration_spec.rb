@@ -1,23 +1,47 @@
 Encoding.default_internal = Encoding.default_external = 'ISO-8859-1' if RUBY_VERSION >= '1.9'
 require 'capybara'
-require 'capybara-webkit'
 require 'capybara/dsl'
-require 'headless'
 require 'minitest/hooks/default'
 require 'minitest/autorun'
 
-Capybara.current_driver = :webkit
+case ENV['CAPYBARA_DRIVER']
+when 'chrome'
+  puts "testing using chrome"
+  require 'selenium-webdriver'
+  Capybara.register_driver :chrome do |app|
+    Capybara::Selenium::Driver.new app, browser: :chrome, options: Selenium::WebDriver::Chrome::Options.new(args: %w[headless disable-gpu])
+  end
+
+  Capybara.current_driver = :chrome
+when 'firefox'
+  puts "testing using firefox"
+  require 'selenium-webdriver'
+  Capybara.register_driver :firefox do |app|
+    browser_options = Selenium::WebDriver::Firefox::Options.new
+    browser_options.args << '--headless'
+    Capybara::Selenium::Driver.new(app, browser: :firefox, marionette: true, options: browser_options)
+  end
+  Capybara.current_driver = :firefox
+else
+  puts "testing using capybara-webkit"
+  require 'capybara-webkit'
+  require 'headless'
+  use_headless = true
+  Capybara.current_driver = :webkit
+  Capybara::Webkit.configure do |config|
+    config.block_unknown_urls
+  end
+end
 Capybara.default_selector = :css
 Capybara.server_port = ENV['PORT'].to_i
-Capybara::Webkit.configure do |config|
-  config.block_unknown_urls
-end
 
 describe 'Quinto Site' do
   include Capybara::DSL
 
-  around do |&block|
-    Headless.ly{super(&block)}
+  if use_headless
+    around do |&block|
+      Headless.ly{super(&block)}
+    end
   end
 
   after do
@@ -47,8 +71,13 @@ describe 'Quinto Site' do
 
   def wait
     print '.'
-    while page.evaluate_script("$('#spinner h2').css('display') == 'inline-block'") do
-      sleep 0.1
+    begin
+      while page.evaluate_script("$('#spinner h2').css('display') == 'inline-block'") do
+        sleep 0.1
+      end
+    rescue
+      # $ may not be defined on the page, and some drivers raise an error for that
+      nil
     end
     sleep 0.3
   end
