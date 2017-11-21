@@ -22,6 +22,6 @@ task 'web-spec' do
 end
 
 default_specs = %w'unit-spec'
-default_specs << 'web-spec' if RUBY_VERSION > '2.1'
+default_specs << 'web-spec' if RUBY_VERSION > '2.3'
 desc 'Run all specs'
 task :default=>default_specs
