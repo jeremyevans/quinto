@@ -1,1 +1,2 @@
-spec/unicorn.pid
+/spec/unicorn.pid
+/.env.rb

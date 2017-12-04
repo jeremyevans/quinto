@@ -5,7 +5,12 @@ require 'bcrypt'
 require 'securerandom'
 
 module Quinto
-  DB = Sequel.connect(ENV['QUINTO_DATABASE_URL'] || ENV['DATABASE_URL'])
+  begin
+    require_relative '../../.env'
+  rescue LoadError
+  end
+
+  DB = Sequel.connect(ENV.delete('QUINTO_DATABASE_URL') || ENV.delete('DATABASE_URL'))
   DB.extension :date_arithmetic
   require 'logger'
   #DB.loggers << Logger.new($stdout)
