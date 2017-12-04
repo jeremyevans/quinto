@@ -20,15 +20,21 @@ module Quinto
     plugin :json
     plugin :param_matchers
     plugin :message_bus
+    plugin :typecast_params
 
     plugin :not_found do
       view(:content=>"<h1>Not Found</h1>")
     end
 
     plugin :error_handler do |e|
-      puts e
-      puts e.backtrace
-      e.message
+      case e
+      when Roda::RodaPlugins::TypecastParams::Error
+        response.status = 400
+        view(:content=>"<h1>Invalid parameter submitted: #{h e.param_name}</h1>")
+      else
+        $stderr.puts "#{e.class}: #{e.message}", e.backtrace
+        e.message
+      end
     end
 
     plugin :rodauth do
@@ -77,7 +83,7 @@ module Quinto
       next unless player
 
       r.get "stats", :param => 'login' do |email|
-        @other_player = Player.from_email(email)
+        @other_player = Player.from_email(email.to_s)
         @stats = player.stats(@other_player)
         :stats
       end
@@ -88,7 +94,7 @@ module Quinto
         end
 
         r.post "new" do
-          email_str = r['emails']
+          email_str = typecast_params.str!('emails')
 
           if TEST_MODE
             email_str, tiles = email_str.split(':', 2)
@@ -139,7 +145,7 @@ module Quinto
           end
 
           r.post "move" do
-            move_or_pass(game_id){|game_state| game_state.move(r['move'])}
+            move_or_pass(game_id){|game_state| game_state.move(typecast_params.str!('move'))}
           end
         end
       end
