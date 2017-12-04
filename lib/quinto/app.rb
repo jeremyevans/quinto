@@ -12,8 +12,7 @@ module Quinto
 
     TEST_MODE = ENV['QUINTO_TEST'] == '1'
 
-    secret = ENV['QUINTO_SESSION_SECRET'] || SecureRandom.hex(30)
-    use Rack::Session::Cookie, :secret=>secret, :key => '_quinto_session'
+    use Rack::Session::Cookie, :secret=>(ENV.delete('QUINTO_SESSION_SECRET') || SecureRandom.hex(30)), :key => '_quinto_session'
 
     plugin :public
     plugin :render, :escape=>true
