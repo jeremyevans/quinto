@@ -26,11 +26,16 @@ application specific server and database:
     done
 
 You need to set the QUINTO\_DATABASE\_URL environment variable to a PostgreSQL
-connection URL before starting the server.
+connection URL before starting the server, and should also set the
+QUINTO_SESSION_SECRET environment variable. One way to set this is to create a
+.env.rb file in the root of the repository containing:
 
-You can then run the server:
+  ENV['QUINTO_DATABASE_URL'] ||= 'postgres:///?user=quinto&password=...'
+  ENV['QUINTO_SESSION_SECRET'] ||= '...'
 
-    foreman
+You can then run the server (via unicorn or another rack-compatible webserver):
+
+    unicorn
 
 ## Tests
 
