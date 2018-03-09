@@ -20,6 +20,7 @@ module Quinto
     plugin :json
     plugin :param_matchers
     plugin :message_bus
+    plugin :request_aref, :raise
     plugin :typecast_params
 
     plugin :not_found do
