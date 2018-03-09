@@ -1,16 +1,17 @@
 require 'roda'
 require 'tilt/erubi'
+require 'message_bus'
+
 require_relative 'game'
 require_relative 'db'
-
-require 'message_bus'
-MessageBus.configure(:backend=>:memory)
 
 module Quinto
   class App < Roda
     opts[:root] = File.expand_path('../../..', __FILE__)
 
     TEST_MODE = ENV['QUINTO_TEST'] == '1'
+    MESSAGE_BUS = MessageBus::Instance.new
+    MESSAGE_BUS.configure(:backend=>:memory)
 
     use Rack::Session::Cookie, :secret=>(ENV.delete('QUINTO_SESSION_SECRET') || SecureRandom.hex(30)), :key => '_quinto_session'
 
@@ -19,7 +20,7 @@ module Quinto
     plugin :symbol_views
     plugin :json
     plugin :param_matchers
-    plugin :message_bus
+    plugin :message_bus, :message_bus=>MESSAGE_BUS
     plugin :request_aref, :raise
     plugin :typecast_params
 
@@ -202,7 +203,7 @@ module Quinto
       game_state = yield(game_state)
       game_state.persist
 
-      MessageBus.publish("/game/#{game_id}", 'null')
+      MESSAGE_BUS.publish("/game/#{game_id}", 'null')
       update_actions_json(game_state)
     end
   end
