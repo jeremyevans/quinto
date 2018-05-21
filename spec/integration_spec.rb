@@ -1,6 +1,8 @@
 Encoding.default_internal = Encoding.default_external = 'ISO-8859-1' if RUBY_VERSION >= '1.9'
 require 'capybara'
 require 'capybara/dsl'
+
+ENV['MT_NO_PLUGINS'] = '1' # Work around stupid autoloading of plugins
 require 'minitest/hooks/default'
 require 'minitest/autorun'
 
