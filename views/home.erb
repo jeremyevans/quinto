@@ -17,7 +17,7 @@
 <h2>Start New Game</h2>
 
 <form action="/game/new" method="POST">
-  <%== csrf_tag %>
+  <%== csrf_tag("/game/new") %>
   <label for="emails">Other Players:</label>
   <input type="text" name="emails" id="emails">
   <input type="submit" class="btn btn-primary" value="Start New Game">

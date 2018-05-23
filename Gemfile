@@ -1,10 +1,9 @@
 source "https://rubygems.org"
 
 gem 'sequel', '>= 5'
-gem 'roda', '>= 3.5'
-gem 'rodauth'
+gem 'roda', '>= 3.9'
+gem 'rodauth', '>= 1.17'
 gem 'roda-message_bus'
-gem 'rack_csrf'
 gem 'bcrypt'
 gem 'pg'
 gem 'sequel_pg', '>= 1.7'

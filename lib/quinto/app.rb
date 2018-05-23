@@ -39,7 +39,7 @@ module Quinto
       end
     end
 
-    plugin :rodauth do
+    plugin :rodauth, :csrf=>:route_csrf do
       enable :login, :logout, :create_account, :change_password, :change_login, :remember
       db DB
       prefix "/auth"
@@ -65,6 +65,7 @@ module Quinto
       rodauth.load_memory
 
       r.on "auth" do
+        check_csrf!
         r.rodauth
       end
 
@@ -96,6 +97,7 @@ module Quinto
         end
 
         r.post "new" do
+          check_csrf!
           email_str = typecast_params.str!('emails')
 
           if TEST_MODE
@@ -141,6 +143,8 @@ module Quinto
             game_state = game_state_from_request(game_id, move_count)
             update_actions_json(game_state, :previous=>true)
           end
+
+          check_csrf!
 
           r.post "pass" do
             move_or_pass(game_id, &:pass)

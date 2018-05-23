@@ -9,11 +9,10 @@
   var gameId = parseInt(game_info.getAttribute('data-gameId'));
   var playerPosition = parseInt(game_info.getAttribute('data-playerPosition'));
   var players = JSON.parse(game_info.getAttribute('data-players'));
-  var token = game_info.getAttribute('data-token');
   var channel = game_info.getAttribute('data-channel');
   var baseUrl = channel + '/';
-
-  $.ajaxSetup({headers: {'X-CSRF-TOKEN': token}});
+  var csrfMove = game_info.getAttribute('data-move');
+  var csrfPass = game_info.getAttribute('data-pass');
 
   MessageBus.baseUrl = baseUrl;
   MessageBus.start();
@@ -301,11 +300,14 @@
 
   sendMove = post("/move", function() {
     return {
-      move: getMove()
+      move: getMove(),
+      _csrf: csrfMove
     };
   });
 
-  sendPass = post("/pass");
+  sendPass = post("/pass", function() {
+    return {_csrf: csrfPass};
+  });
 
   processTiles = function() {
     var b, r;

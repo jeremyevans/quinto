@@ -1,7 +1,7 @@
 <% @no_page_title = true %>
 <% @page_title = "Game #{@game_id}: VS #{(@players - [player.email]).join(', ')}" %>
 
-<div class="row" id="game-info" data-gameId="<%= @game_id %>" data-playerPosition="<%= @position %>" data-players="<%= @players.to_json %>" data-token="<%= csrf_token %>" data-channel="<%= request.path_info %>">
+<div class="row" id="game-info" data-gameId="<%= @game_id %>" data-playerPosition="<%= @position %>" data-players="<%= @players.to_json %>" data-channel="<%= request.path_info %>" data-move="<%= csrf_token(request.path + '/move') %>" data-pass="<%= csrf_token(request.path + '/pass') %>">
   <div class="col-md-4">
     <h1 id="title">Game <%= @game_id %>: VS
       <% (@players - [player.email]).each do |email| %>
