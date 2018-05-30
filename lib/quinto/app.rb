@@ -60,6 +60,16 @@ module Quinto
       remember_period :days=>365
     end
 
+    plugin :content_security_policy do |csp|
+      csp.default_src :none
+      csp.style_src :self
+      csp.form_action :self
+      csp.script_src :self
+      csp.connect_src :self
+      csp.base_uri :none
+      csp.frame_ancestors :none
+    end
+
     route do |r|
       r.public
       rodauth.load_memory
