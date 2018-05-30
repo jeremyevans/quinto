@@ -30,8 +30,8 @@ connection URL before starting the server, and should also set the
 QUINTO_SESSION_SECRET environment variable. One way to set this is to create a
 .env.rb file in the root of the repository containing:
 
-  ENV['QUINTO_DATABASE_URL'] ||= 'postgres:///?user=quinto&password=...'
-  ENV['QUINTO_SESSION_SECRET'] ||= '...'
+    ENV['QUINTO_DATABASE_URL'] ||= 'postgres:///?user=quinto&password=...'
+    ENV['QUINTO_SESSION_SECRET'] ||= '...'
 
 You can then run the server (via unicorn or another rack-compatible webserver):
 
