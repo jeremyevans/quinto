@@ -64,7 +64,11 @@ module Quinto
       csp.default_src :none
       csp.style_src :self
       csp.form_action :self
-      csp.script_src :self
+      if TEST_MODE
+        csp.script_src :self, :unsafe_eval
+      else
+        csp.script_src :self
+      end
       csp.connect_src :self
       csp.base_uri :none
       csp.frame_ancestors :none
