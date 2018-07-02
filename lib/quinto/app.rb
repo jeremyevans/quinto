@@ -48,9 +48,9 @@ module Quinto
       require_email_address_logins? false
       update_session do
         super()
-        session[:email] = account[:email]
+        session['email'] = account[:email]
       end
-      after_change_login{session[:email] = DB[:players].where(:id=>session_value).get(:email)}
+      after_change_login{session['email'] = DB[:players].where(:id=>session_value).get(:email)}
       logout_redirect '/auth/login'
 
       after_login{remember_login}
@@ -84,7 +84,7 @@ module Quinto
       end
 
       if player_id = rodauth.session_value
-        @player = Player.new(player_id, session[:email])
+        @player = Player.new(player_id, session['email'])
       end
 
       r.root do
