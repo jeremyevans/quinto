@@ -5,7 +5,5 @@ begin
   require 'refrigerator'
 rescue LoadError
 else
-  # Don't freeze BasicObject, as tilt template compilation
-  # defines and removes methods in BasicObject.
-  Refrigerator.freeze_core(:except=>[(Object.superclass || Object).name])
+  Refrigerator.freeze_core
 end

@@ -13,8 +13,6 @@ module Quinto
     MESSAGE_BUS = MessageBus::Instance.new
     MESSAGE_BUS.configure(:backend=>:memory)
 
-    use Rack::Session::Cookie, :secret=>(ENV.delete('QUINTO_SESSION_SECRET') || SecureRandom.hex(30)), :key => '_quinto_session'
-
     plugin :public
     plugin :render, :escape=>true
     plugin :symbol_views
@@ -73,6 +71,11 @@ module Quinto
       csp.base_uri :none
       csp.frame_ancestors :none
     end
+
+    plugin :sessions,
+      :cipher_secret=>ENV.delete('QUINTO_SESSION_CIPHER_SECRET'),
+      :hmac_secret=>ENV.delete('QUINTO_SESSION_HMAC_SECRET'),
+      :key => 'quinto.session'
 
     route do |r|
       r.public
