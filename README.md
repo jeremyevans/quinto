@@ -28,15 +28,13 @@ application specific server and database:
 You need to set the following environment variables:
 
 QUINTO\_DATABASE\_URL :: PostgreSQL database connection URL
-QUINTO\_SESSION\_CIPHER\_SECRET :: 32 byte randomly generated secret
-QUINTO\_SESSION\_HMAC\_SECRET :: >=32 byte randomly generated secret
+QUINTO\_SESSION\_SECRET :: >=64 byte randomly generated secret
 
 One way to set this is to create a .env.rb file in the root of the repository
 containing:
 
     ENV['QUINTO_DATABASE_URL'] ||= 'postgres:///?user=quinto&password=...'
-    ENV['QUINTO_SESSION_CIPHER_SECRET'] ||= '...'
-    ENV['QUINTO_SESSION_HMAC_SECRET'] ||= '...'
+    ENV['QUINTO_SESSION_SECRET'] ||= '...'
 
 You can then run the server (via unicorn or another rack-compatible webserver):
 

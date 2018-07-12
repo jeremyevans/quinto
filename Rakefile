@@ -9,8 +9,7 @@ task 'web-spec' do
   ENV['QUINTO_TEST'] = '1'
   ENV['PORT'] ||= '3001'
   ENV['QUINTO_DATABASE_URL'] ||= "postgres:///quinto_test?user=quinto"
-  ENV['QUINTO_SESSION_CIPHER_SECRET'] ||= SecureRandom.base64(24)
-  ENV['QUINTO_SESSION_HMAC_SECRET'] ||= SecureRandom.base64(24)
+  ENV['QUINTO_SESSION_SECRET'] ||= SecureRandom.base64(48)
 
   sh "psql -U quinto -f sql/clean.sql \"quinto_test\""
   Process.spawn("#{ENV['UNICORN']||'unicorn'} -E test -p #{ENV['PORT']} -D -c spec/unicorn.conf")

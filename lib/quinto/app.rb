@@ -73,8 +73,7 @@ module Quinto
     end
 
     plugin :sessions,
-      :cipher_secret=>ENV.delete('QUINTO_SESSION_CIPHER_SECRET'),
-      :hmac_secret=>ENV.delete('QUINTO_SESSION_HMAC_SECRET'),
+      :secret=>ENV.delete('QUINTO_SESSION_SECRET'),
       :key => 'quinto.session'
 
     route do |r|
