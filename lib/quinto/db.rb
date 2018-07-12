@@ -1,3 +1,8 @@
+begin
+  require_relative '../../.env'
+rescue LoadError
+end
+
 require_relative 'structs'
 require 'sequel'
 require 'json'
@@ -5,11 +10,6 @@ require 'bcrypt'
 require 'securerandom'
 
 module Quinto
-  begin
-    require_relative '../../.env'
-  rescue LoadError
-  end
-
   DB = Sequel.connect(ENV.delete('QUINTO_DATABASE_URL') || ENV.delete('DATABASE_URL'))
   DB.extension :date_arithmetic
   require 'logger'
