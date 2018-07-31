@@ -1,9 +1,9 @@
+require_relative 'game'
+require_relative 'db'
+
 require 'roda'
 require 'tilt/erubi'
 require 'message_bus'
-
-require_relative 'game'
-require_relative 'db'
 
 module Quinto
   class App < Roda
