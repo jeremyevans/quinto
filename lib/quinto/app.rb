@@ -22,6 +22,14 @@ module Quinto
     plugin :request_aref, :raise
     plugin :typecast_params
 
+    logger = case ENV['RACK_ENV']
+    when 'development', 'test' # Remove development after Unicorn 5.5+
+      Class.new{def write(_) end}.new
+    else
+      $stderr
+    end
+    plugin :common_logger, logger
+
     plugin :not_found do
       view(:content=>"<h1>Not Found</h1>")
     end
