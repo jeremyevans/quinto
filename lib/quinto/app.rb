@@ -8,11 +8,14 @@ require 'message_bus'
 module Quinto
   class App < Roda
     opts[:root] = File.expand_path('../../..', __FILE__)
+    opts[:check_dynamic_arity] = false
+    opts[:check_arity] = :warn
 
     TEST_MODE = ENV['QUINTO_TEST'] == '1'
     MESSAGE_BUS = MessageBus::Instance.new
     MESSAGE_BUS.configure(:backend=>:memory)
 
+    plugin :direct_call
     plugin :public
     plugin :render, :escape=>true
     plugin :symbol_views
