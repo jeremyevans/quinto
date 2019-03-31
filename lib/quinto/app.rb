@@ -153,32 +153,36 @@ module Quinto
         r.on Integer do |game_id|
           r.message_bus
 
-          r.get true do
-            game_state = game_state_from_request(game_id)
-            @players = game_state.game.player_emails
-            @position = game_state.game.player_position(player)
-            @game_id = game_state.game.id
-            :board
+          r.get do
+            r.is do
+              game_state = game_state_from_request(game_id)
+              @players = game_state.game.player_emails
+              @position = game_state.game.player_position(player)
+              @game_id = game_state.game.id
+              :board
+            end
+
+            r.is "check" do
+              game_state = game_state_from_request(game_id)
+              update_actions_json(game_state)
+            end
+
+            r.is "state", Integer do |move_count|
+              game_state = game_state_from_request(game_id, move_count)
+              update_actions_json(game_state, :previous=>true)
+            end
           end
 
-          r.get "check" do
-            game_state = game_state_from_request(game_id)
-            update_actions_json(game_state)
-          end
+          r.post do
+            check_csrf!
 
-          r.get "state", Integer do |move_count|
-            game_state = game_state_from_request(game_id, move_count)
-            update_actions_json(game_state, :previous=>true)
-          end
+            r.is "pass" do
+              move_or_pass(game_id, &:pass)
+            end
 
-          check_csrf!
-
-          r.post "pass" do
-            move_or_pass(game_id, &:pass)
-          end
-
-          r.post "move" do
-            move_or_pass(game_id){|game_state| game_state.move(typecast_params.str!('move'))}
+            r.is "move" do
+              move_or_pass(game_id){|game_state| game_state.move(typecast_params.str!('move'))}
+            end
           end
         end
       end
