@@ -4,6 +4,7 @@ require_relative 'db'
 require 'roda'
 require 'tilt/erubi'
 require 'message_bus'
+require 'strscan' # Needed for Rack::Multipart::Parser
 
 module Quinto
   class App < Roda
