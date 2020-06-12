@@ -311,7 +311,6 @@ module Quinto
       else
         col_runs = {}
         row_runs = {}
-        score = nil
 
         move.each do |tile_position|
           row = tile_position.row

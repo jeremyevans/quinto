@@ -1,4 +1,5 @@
 Encoding.default_internal = Encoding.default_external = 'ISO-8859-1' if RUBY_VERSION >= '1.9'
+require_relative 'warnings_helper'
 require 'capybara'
 require 'capybara/dsl'
 
