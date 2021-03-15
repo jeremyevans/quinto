@@ -11,7 +11,8 @@ require 'securerandom'
 
 module Quinto
   DB = Sequel.connect(ENV.delete('QUINTO_DATABASE_URL') || ENV.delete('DATABASE_URL'))
-  DB.extension :date_arithmetic
+  DB.extension :date_arithmetic, :pg_array, :pg_row
+  DB.register_row_type(:game_states)
   require 'logger'
   #DB.loggers << Logger.new($stdout)
   DB.freeze
@@ -28,6 +29,12 @@ module Quinto
   GameInsert = DB[:games].prepare(:insert, :games_insert, {})
   GamePlayerInsert = DB[:game_players].prepare(:insert, :game_player_insert, ps_hash.call(%w"game_id player_id position"))
   GameStateInsert = DB[:game_states].prepare(:insert, :game_state_insert, ps_hash.call(%w"game_id move_count to_move tiles board last_move pass_count game_over racks scores"))
+  DeleteFinishedGameStates = DB[:game_states].prepare(:delete, :game_states_delete, ps_hash.call(%w"game_id"))
+
+  FinishedGameStates = DB[:games].
+    where(:id=>:$id).
+    select(:finished_game_states).
+    prepare(:single_value, :finished_game_states)
 
   PlayerFromEmail = DB[:players].
     select(:id).
@@ -40,9 +47,7 @@ module Quinto
         where(:game_id=>DB[:game_players].
           select(:game_id).
           where(:player_id=>:$id).
-          send(meth, :game_id=>DB[:game_states].
-            select(:game_id).
-            where(:game_over=>true))).
+          send(meth, :game_id=>DB[:games].select(:id).where(:finished_game_states=>nil))).
         as(:g),
         Sequel[:players][:id]=>Sequel[:g][:player_id]).
       order(Sequel.desc(Sequel[:g][:game_id])).
@@ -51,8 +56,8 @@ module Quinto
       select_append{string_agg(Sequel[:players][:email], ', ').order(Sequel[:g][:position]).as(:emails)}.
       prepare([:to_hash, :game_id, :emails], ps_name)
   end
-  PlayerActiveGames = player_games.call(:exclude, :player_active_games)
-  PlayerFinishedGames = player_games.call(:where, :player_finished_games)
+  PlayerActiveGames = player_games.call(:where, :player_active_games)
+  PlayerFinishedGames = player_games.call(:exclude, :player_finished_games)
 
   GameFromIdPlayer = DB[:players].
     join(:game_players, Sequel[:players][:id]=>Sequel[:game_players][:player_id]).
@@ -75,6 +80,14 @@ module Quinto
   GameStateAt = game_state_ds.
     where(:move_count=>:$move_count).
     prepare(:first, :game_state_at)
+
+  PackFinishedGame = DB[:games].
+    where(:id=>:$game_id).
+    prepare(:update,
+            :pack_finished_game,
+            :finished_game_states=>DB[:game_states].
+              where(:game_id=>:$game_id).
+              select{array_agg(:game_states).order(:move_count)})
 
   TOKEN_LENGTH = 16
 
@@ -127,12 +140,16 @@ module Quinto
         where(:id=>DB[:game_players].where(:player_id=>id).select(:game_id)).
         where(:id=>DB[:game_players].where(:player_id=>other_id).select(:game_id)).
         where(:id=>DB[:game_players].select_group(:game_id).having{{count.function.* => 2}}).
-        where(:id=>DB[:game_states].where(:game_over).select(:game_id)).
+        exclude(:finished_game_states=>nil).
         select_map(:id)
 
-      players = DB[:game_players].order(:position).where(:game_id=>game_ids).to_hash_groups(:game_id, :player_id)
-      moves = DB[:game_states].where(:game_id=>game_ids).to_hash_groups(:game_id, [:to_move, :last_move])
-      final_moves = DB[:game_states].where(:game_id=>game_ids).where(:game_over).to_hash(:game_id, :scores)
+      players = DB[:game_players].order(:position).where(:game_id=>game_ids).select_hash_groups(:game_id, :player_id)
+      moves = {}
+      final_moves = {}
+      DB[:games].where(:id=>game_ids).select_map([:id, :finished_game_states]).each do |id, fgs|
+        moves[id] = fgs.map{|gs| gs.values_at(:to_move, :last_move)}
+        final_moves[id] = fgs.find{|gs| gs[:game_over]}[:scores]
+      end
 
       player_map = {true=>{id=>other_id, other_id=>id}, false=>{id=>id, other_id=>other_id}}
       player_tiles = {id=>[], other_id=>[]}
@@ -203,7 +220,15 @@ module Quinto
 
   class GameState
     def persist
-      GameStateInsert.call(:game_id=>game.id, :move_count=>move_count, :to_move=>to_move, :tiles=>tiles.to_json, :board=>board.to_json, :last_move=>last_move, :pass_count=>pass_count, :game_over=>game_over, :racks=>racks.to_json, :scores=>scores.to_json)
+      DB.transaction do
+        GameStateInsert.call(:game_id=>game.id, :move_count=>move_count, :to_move=>to_move, :tiles=>tiles.to_json, :board=>board.to_json, :last_move=>last_move, :pass_count=>pass_count, :game_over=>game_over, :racks=>racks.to_json, :scores=>scores.to_json)
+
+        if game_over
+          PackFinishedGame.call(:game_id=>game.id)
+          DeleteFinishedGameStates.call(:game_id=>game.id)
+        end
+      end
+
       self
     end
 
@@ -216,7 +241,17 @@ module Quinto
   class Game
     def state(move_count=nil)
       unless row = move_count ? GameStateAt.call(:game_id=>id, :move_count=>move_count) : CurrentGameState.call(:game_id=>id)
-        raise Error, "No matching game state for game #{id}"
+        if fgs = FinishedGameStates.call(:id=>id)
+          row = if move_count
+            fgs.find{|gs| gs[:move_count] == move_count}
+          else
+            fgs.last
+          end
+        end
+
+        unless row
+          raise Error, "No matching game state for game #{id}"
+        end
       end
 
       GameState.new(self, row[:move_count], row[:to_move], JSON.parse(row[:tiles]), JSON.parse(row[:racks]), JSON.parse(row[:scores]), row[:pass_count], row[:game_over], JSON.parse(row[:board]), row[:last_move])
