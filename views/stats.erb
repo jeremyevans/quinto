@@ -55,9 +55,9 @@
         <td><%= i %></td>
         <td><%= @stats[:number_counts][player.id][i] %></td>
         <td><%= @stats[:number_counts][@other_player.id][i] %></td>
-        <td><%= '%0.2f' % (@stats[:number_percentages][player.id][i]*100) %></td>
-        <td><%= '%0.2f' % (@stats[:number_percentages][@other_player.id][i]*100) %></td>
-        <td><%= '%0.2f' % (@stats[:number_counts][player.id][i].to_f/(@stats[:number_counts][player.id][i]+@stats[:number_counts][@other_player.id][i])*100) %></td>
+        <td><%= '%0.2f' % ((@stats[:number_percentages][player.id][i] || 0)*100) %></td>
+        <td><%= '%0.2f' % ((@stats[:number_percentages][@other_player.id][i] || 0)*100) %></td>
+        <td><%= '%0.2f' % (@stats[:number_counts][player.id][i].to_f/((@stats[:number_counts][player.id][i] || 0)+(@stats[:number_counts][@other_player.id][i]||0))*100) %></td>
       </tr>
     <% end %>
   </tbody>
