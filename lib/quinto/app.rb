@@ -62,6 +62,7 @@ module Quinto
       end
       after_change_login{session['email'] = DB[:players].where(:id=>session_value).get(:email)}
       logout_redirect '/auth/login'
+      login_input_type 'text'
 
       after_login{remember_login}
       after_create_account{remember_login}
