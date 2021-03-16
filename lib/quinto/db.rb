@@ -12,7 +12,9 @@ require 'securerandom'
 module Quinto
   DB = Sequel.connect(ENV.delete('QUINTO_DATABASE_URL') || ENV.delete('DATABASE_URL'))
   DB.extension :date_arithmetic, :pg_array, :pg_row
+  Sequel.extension :pg_array_ops
   DB.register_row_type(:game_states)
+
   require 'logger'
   #DB.loggers << Logger.new($stdout)
   DB.freeze
@@ -26,8 +28,7 @@ module Quinto
   end
 
   PlayerInsert = DB[:players].prepare(:insert, :player_insert, ps_hash.call(%w"email hash"))
-  GameInsert = DB[:games].prepare(:insert, :games_insert, {})
-  GamePlayerInsert = DB[:game_players].prepare(:insert, :game_player_insert, ps_hash.call(%w"game_id player_id position"))
+  GameInsert = DB[:games].prepare(:insert, :games_insert, ps_hash.call(%w"player_ids"))
   GameStateInsert = DB[:game_states].prepare(:insert, :game_state_insert, ps_hash.call(%w"game_id move_count to_move tiles board last_move pass_count game_over racks scores"))
   DeleteFinishedGameStates = DB[:game_states].prepare(:delete, :game_states_delete, ps_hash.call(%w"game_id"))
 
@@ -41,33 +42,22 @@ module Quinto
     where(:email=>:$email).
     prepare(:first, :player_from_email)
 
-  player_games = lambda do |meth, ps_name|
-    DB[:players].
-      join(DB[:game_players].
-        where(:game_id=>DB[:game_players].
-          select(:game_id).
-          where(:player_id=>:$id).
-          send(meth, :game_id=>DB[:games].select(:id).where(:finished_game_states=>nil))).
-        as(:g),
-        Sequel[:players][:id]=>Sequel[:g][:player_id]).
-      order(Sequel.desc(Sequel[:g][:game_id])).
-      exclude(Sequel[:players][:id]=>:$id).
-      select_group(Sequel[:g][:game_id]).
-      select_append{string_agg(Sequel[:players][:email], ', ').order(Sequel[:g][:position]).as(:emails)}.
-      prepare([:to_hash, :game_id, :emails], ps_name)
-  end
-  PlayerActiveGames = player_games.call(:where, :player_active_games)
-  PlayerFinishedGames = player_games.call(:exclude, :player_finished_games)
+  PlayerGames = DB[:games].
+    where(Sequel.pg_array_op(:player_ids).contains(Sequel.pg_array([:$player_id], :integer))).
+    select{[:id, array_remove(:player_ids, :$player_id).as(:pids), (finished_game_states=~nil).as(:active)]}.
+    reverse(:id).
+    prepare([:map, [:id, :pids, :active]], :player_games)
 
-  GameFromIdPlayer = DB[:players].
-    join(:game_players, Sequel[:players][:id]=>Sequel[:game_players][:player_id]).
-    select(Sequel[:players][:id], Sequel[:players][:email]).
-    where(Sequel[:game_players][:game_id]=>:$game_id).
-    where(Sequel[:game_players][:game_id]=>DB[:game_players].
-      select(:game_id).
-      where(:player_id=>:$player_id)).
-    order(Sequel[:game_players][:position]).
-    prepare(:all, :game_from_id_player)
+  PlayerEmails = DB[:players].
+    where(:id=>Sequel.pg_array_op(:$player_ids).any).
+    select(:id, :email).
+    prepare([:to_hash, :id, :email], :player_emails)
+
+  GameFromIdPlayer = DB[:games].
+    where(:id=>:$game_id).
+    where(Sequel.pg_array_op(:player_ids).contains(Sequel.pg_array([:$player_id], :integer))).
+    select(:player_ids).
+    prepare(:single_value, :game_from_id_player)
 
   game_state_ds = DB[:game_states].
     select(:move_count, :to_move, :tiles, :board, :last_move, :pass_count, :game_over, :racks, :scores).
@@ -84,7 +74,7 @@ module Quinto
   PackFinishedGame = DB[:games].
     where(:id=>:$game_id).
     prepare(:update,
-            :pack_finished_game,
+            :pack_finished_game_states,
             :finished_game_states=>DB[:game_states].
               where(:game_id=>:$game_id).
               select{array_agg(:game_states).order(:move_count)})
@@ -114,42 +104,51 @@ module Quinto
       end
 
       DB.transaction do
-        game = Game.new(GameInsert.call, players)
-        players.each_with_index{|player, i| GamePlayerInsert.call(:game_id=>game.id, :player_id=>player.id, :position=>i)}
+        game = Game.new(GameInsert.call(:player_ids=>Sequel.pg_array(players.map(&:id))), players)
         GameState.empty(game, tiles, num_players).persist
       end
     end
 
     def from_id_player(game_id, player_id)
-      new(game_id, GameFromIdPlayer.call(:game_id=>game_id, :player_id=>player_id).map{|row| Player.new(row[:id], row[:email])})
+      player_ids = GameFromIdPlayer.call(:game_id=>game_id, :player_id=>player_id) || []
+      player_email_map = PlayerEmails.call(:player_ids=>Sequel.pg_array(player_ids.uniq))
+      new(game_id, player_ids.map{|pid| Player.new(pid, player_email_map[pid])})
     end
   end
 
   class Player
-    def active_games
-      PlayerActiveGames.call(:id=>id)
-    end
+    def active_and_finished_games
+      games = PlayerGames.call(:player_id=>id)
+      player_ids = []
+      games.each do |_, pids, _|
+        player_ids.concat(pids)
+      end
+      player_email_map = PlayerEmails.call(:player_ids=>Sequel.pg_array(player_ids.uniq))
 
-    def finished_games
-      PlayerFinishedGames.call(:id=>id)
+      active, finished = {}, {}
+      games.each do |game_id, pids, act|
+        (act ? active : finished)[game_id] = pids.map{|pid| player_email_map[pid]}.join(', ')
+      end
+
+      [active, finished]
     end
 
     def stats(other_player)
       other_id = other_player.id
-      game_ids = DB[:games].
-        where(:id=>DB[:game_players].where(:player_id=>id).select(:game_id)).
-        where(:id=>DB[:game_players].where(:player_id=>other_id).select(:game_id)).
-        where(:id=>DB[:game_players].select_group(:game_id).having{{count.function.* => 2}}).
-        exclude(:finished_game_states=>nil).
-        select_map(:id)
-
-      players = DB[:game_players].order(:position).where(:game_id=>game_ids).select_hash_groups(:game_id, :player_id)
+      players = {}
       moves = {}
       final_moves = {}
-      DB[:games].where(:id=>game_ids).select_map([:id, :finished_game_states]).each do |id, fgs|
-        moves[id] = fgs.map{|gs| gs.values_at(:to_move, :last_move)}
-        final_moves[id] = fgs.find{|gs| gs[:game_over]}[:scores]
-      end
+
+      DB[:games].
+        where(Sequel.pg_array_op(:player_ids).contains([id, other_id])).
+        where(Sequel.pg_array_op(:player_ids).cardinality=>2).
+        exclude(:finished_game_states=>nil).
+        select_map([:id, :finished_game_states, :player_ids]).
+        each do |id, fgs, fgp|
+          players[id] = fgp
+          moves[id] = fgs.map{|gs| gs.values_at(:to_move, :last_move)}
+          final_moves[id] = fgs.find{|gs| gs[:game_over]}[:scores]
+        end
 
       player_map = {true=>{id=>other_id, other_id=>id}, false=>{id=>id, other_id=>other_id}}
       player_tiles = {id=>[], other_id=>[]}
@@ -214,7 +213,7 @@ module Quinto
         end
       end
 
-      {:games=>game_ids.length, :number_counts=>number_counts, :num_moves=>num_moves, :tiles_per_move=>tiles_per_move, :number_percentages=>number_percentages, :wins=>wins, :scores=>scores}
+      {:games=>moves.length, :number_counts=>number_counts, :num_moves=>num_moves, :tiles_per_move=>tiles_per_move, :number_percentages=>number_percentages, :wins=>wins, :scores=>scores}
     end
   end
 
