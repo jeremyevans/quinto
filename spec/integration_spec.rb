@@ -95,7 +95,7 @@ describe 'Quinto Site' do
   end
 
   it "should work as expected" do
-    visit('http://127.0.0.1:3001/')
+    visit("http://127.0.0.1:#{ENV['PORT']}/")
     page.html.must_match /How to Play Quinto/
 
     # Registering User #1
