@@ -22,6 +22,6 @@ task 'web-spec' do
 end
 
 default_specs = %w'unit-spec'
-default_specs << 'web-spec' if RUBY_VERSION > '2.6'
+default_specs << 'web-spec' if RUBY_VERSION > '2.7' && !ENV['NO_AJAX']
 desc 'Run all specs'
 task :default=>default_specs
