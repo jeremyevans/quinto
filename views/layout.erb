@@ -2,7 +2,7 @@
 <html>
   <head>
     <title>Quinto<%= " - #{@page_title}" if @page_title %></title>
-    <link rel="stylesheet" href="/bootstrap-3.3.7.customized.min.css">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf8" />
     <link rel='stylesheet' href='/style.css' />
   </head>
   <body>
@@ -27,10 +27,10 @@
 
     <div class="container">
       <% if flash['notice'] %>
-        <div class="alert alert-success"><p><%= flash['notice'] %></p></div>
+        <div class="alert alert-success"><%= flash['notice'] %></div>
       <% end %>
       <% if flash['error'] %>
-        <div class="alert alert-danger"><p><%= flash['error'] %></p></div>
+        <div class="alert alert-danger"><%= flash['error'] %></div>
       <% end %>
       <% unless @no_page_title %>
         <h1 id="title"><%= @page_title %></h1>
