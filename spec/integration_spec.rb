@@ -48,6 +48,7 @@ describe 'Quinto Site' do
   end
 
   after do
+#p page.driver.browser.error_messages
     Capybara.reset_sessions!
   end
 
@@ -74,14 +75,6 @@ describe 'Quinto Site' do
 
   def wait
     print '.'
-    begin
-      while page.evaluate_script("$('#spinner h2').css('display') == 'inline-block'") do
-        sleep 0.1
-      end
-    rescue
-      # $ may not be defined on the page, and some drivers raise an error for that
-      nil
-    end
     sleep 0.3
   end
 
