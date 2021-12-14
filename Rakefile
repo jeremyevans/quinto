@@ -1,3 +1,8 @@
+require 'rake'
+require "rake/clean"
+
+CLEAN.include ["compiled_assets.json", "public/app.*.css", "public/app.*.css.gz", "public/app.*.js", "public/app.*.js.gz", "spec/unicorn.pid", "spec/unicorn.log"]
+
 desc 'Run ruby unit tests'
 task 'unit-spec' do
   sh "#{FileUtils::RUBY} spec/unit_test.rb"
