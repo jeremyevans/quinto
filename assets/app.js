@@ -999,4 +999,17 @@
 
     request('/check');
   })();
+
 }).call(this);
+
+/* Used in specs */
+rack_tile_id = function(value) {
+  var i;
+  for (i=0; i < 5; i++) {
+    var id = 'rack'+i;
+    var elem = document.getElementById(id);
+    if (!elem.classList.contains('move') && elem.innerText - 0 === value) {
+      return id;
+    }
+  }
+}
