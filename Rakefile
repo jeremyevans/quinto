@@ -3,6 +3,15 @@ task 'unit-spec' do
   sh "#{FileUtils::RUBY} spec/unit_test.rb"
 end
 
+namespace :assets do
+  desc "Precompile the assets"
+  task :precompile do
+    ENV["ASSETS_PRECOMPILE"] = '1'
+    require './lib/quinto/app'
+    Quinto::App.compile_assets
+  end
+end
+
 desc 'Run server integration tests'
 task 'web-spec' do
   require 'securerandom'

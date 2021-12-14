@@ -1,3 +1,8 @@
 /spec/unicorn.pid
 /spec/unicorn.log
 /.env.rb
+/compiled_assets.json
+/public/app.*.css
+/public/app.*.css.gz
+/public/app.*.js
+/public/app.*.js.gz

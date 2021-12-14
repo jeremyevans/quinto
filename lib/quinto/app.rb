@@ -17,7 +17,7 @@ module Quinto
     MESSAGE_BUS.configure(:backend=>:memory)
 
     plugin :direct_call
-    plugin :public
+    plugin :public, :gzip=>true
     plugin :render, :escape=>true
     plugin :symbol_views
     plugin :json
@@ -25,6 +25,18 @@ module Quinto
     plugin :message_bus, :message_bus=>MESSAGE_BUS
     plugin :request_aref, :raise
     plugin :typecast_params
+
+    plugin :assets,
+      :css=>%w'style.css',
+      :js=>%w'message-bus.js message-bus-ajax.js app.js',
+      :css_dir=>nil,
+      :js_dir=>nil,
+      :compiled_js_dir=>nil,
+      :compiled_css_dir=>nil,
+      :compiled_path=>nil,
+      :precompiled=>File.expand_path('../../../compiled_assets.json', __FILE__),
+      :prefix=>nil,
+      :gzip=>true
 
     logger = case ENV['RACK_ENV']
     when 'development', 'test' # Remove development after Unicorn 5.5+
