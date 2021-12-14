@@ -132,7 +132,7 @@
   };
 
   actionHandler.poll = function(a) {
-    checkTimeout = setTimeout(actionHandler.check, 900000);
+    checkTimeout = setTimeout(actionHandler.check, 90000);
     MessageBus.subscribe(channel, actionHandler.check);
   }
 
