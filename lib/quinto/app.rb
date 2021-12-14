@@ -39,7 +39,7 @@ module Quinto
       :gzip=>true
 
     logger = case ENV['RACK_ENV']
-    when 'development', 'test' # Remove development after Unicorn 5.5+
+    when 'development'
       Class.new{def write(_) end}.new
     else
       $stderr
@@ -103,6 +103,7 @@ module Quinto
 
     route do |r|
       r.public
+      r.assets
       rodauth.load_memory
 
       r.on "auth" do
