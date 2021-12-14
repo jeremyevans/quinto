@@ -2,7 +2,7 @@
 h1 {font-size: 32px; }
 h2 {font-size: 24px; }
 h3 {font-size: 20px; }
-body {font-size: 18px; margin: 0; padding: 0; }
+body {font-size: 18px; margin: 0; padding: 0; background-color: aliceblue;}
 div#rack h2 {text-align: center;}
 div#scores table {text-align: left;}
 table {margin: auto;}
@@ -13,12 +13,12 @@ a:hover, a:visited { color: #00a; }
 a:hover { text-decoration: underline; }
 
 #board .board_tile, #rack .rack_tile {color: white;}
-#board .fixed, #board #i8.fixed, #rack .rack_tile {background-color: saddleBrown;}
-#board .fixed.last, #board #i8.fixed.last {background-color: blue;}
-#board .move, #board #i8.move, #rack .move {background-color: gold; color: black; }
-#board .current, #board #i8.current, #rack .current {background-color: yellow; color: black; }
+#board .fixed, #board #i8.fixed, #rack .rack_tile {background-color: #7d4a18;}
+#board .fixed.last, #board #i8.fixed.last {background-color: #3686d6;}
+#board .move, #board #i8.move, #rack .move {background-color: #dec41d; color: black; }
+#board .current, #board #i8.current, #rack .current {background-color: white; color: black; }
 
-#board table, #board tr, #board td {background-color: gray; border: solid #555 4px; border-collapse: collapse;}
+#board table, #board tr, #board td {background-color: #a8a8a8; border: solid #555 4px; border-collapse: collapse;}
 #board td, .rack_tile {width: 35px; height: 35px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; padding: 1px; }
 #board td:hover {border: solid #ccc 2px; }
 #board #i8 {background-color: #666; }
