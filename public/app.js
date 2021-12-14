@@ -13,6 +13,7 @@
   var baseUrl = channel + '/';
   var csrfMove = game_info.getAttribute('data-move');
   var csrfPass = game_info.getAttribute('data-pass');
+  var stopCheck = false;
 
   MessageBus.baseUrl = baseUrl;
   MessageBus.start();
@@ -139,7 +140,9 @@
     MessageBus.unsubscribe(channel, actionHandler.check);
     request("/check", null, {
       "error": (function() {
-        setTimeout(actionHandler.check, 60000);
+        if (!stopCheck) {
+          setTimeout(actionHandler.check, 60000);
+        }
       }),
     });
   };
@@ -275,6 +278,8 @@
   };
 
   actionHandler.gameOver = function(a) {
+    MessageBus.unsubscribe(channel, actionHandler.check);
+    stopCheck = true;
     document.getElementById('rack').innerHTML = '';
     return document.getElementById('current_move').innerHTML = "<h2>Game Over!</h2><h2>Winners: " + (a.winners.join(', ')) + "</h2>";
   };
