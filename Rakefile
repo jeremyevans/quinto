@@ -3,9 +3,11 @@ require "rake/clean"
 
 CLEAN.include ["compiled_assets.json", "public/app.*.css", "public/app.*.css.gz", "public/app.*.js", "public/app.*.js.gz", "spec/unicorn.pid", "spec/unicorn.log"]
 
+test_flags = "-w" if RUBY_VERSION >= '3'
+
 desc 'Run ruby unit tests'
 task 'unit-spec' do
-  sh "#{FileUtils::RUBY} spec/unit_test.rb"
+  sh "#{FileUtils::RUBY} #{test_flags} spec/unit_test.rb"
 end
 
 namespace :assets do
@@ -29,7 +31,7 @@ task 'web-spec' do
   Process.spawn("#{ENV['UNICORN']||'unicorn'} -E test -p #{ENV['PORT']} -D -c spec/unicorn.conf")
   begin
     sleep 1
-    sh "#{FileUtils::RUBY} spec/integration_spec.rb"
+    sh "#{FileUtils::RUBY} #{test_flags} spec/integration_spec.rb"
   ensure 
     Process.kill(:SIGTERM, File.read('spec/unicorn.pid').to_i)
   end

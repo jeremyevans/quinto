@@ -1,5 +1,3 @@
-Encoding.default_internal = Encoding.default_external = 'ISO-8859-1' if RUBY_VERSION >= '1.9'
-require_relative 'warnings_helper'
 require 'capybara'
 require 'capybara/dsl'
 
@@ -57,7 +55,7 @@ describe 'Quinto Site' do
     fill_in('Login', :with=>email)
     fill_in('Password', :with=>pass)
     click_button 'Login'
-    page.html.must_match /You have been logged in/
+    page.html.must_include 'You have been logged in'
   end
 
   def login_foo
@@ -89,7 +87,7 @@ describe 'Quinto Site' do
 
   it "should work as expected" do
     visit("http://127.0.0.1:#{ENV['PORT']}/")
-    page.html.must_match /How to Play Quinto/
+    page.html.must_include 'How to Play Quinto'
 
     # Registering User #1
     click_link "Create Account"
@@ -99,9 +97,9 @@ describe 'Quinto Site' do
     fill_in('Confirm Password', :with=>'foobar')
     click_button 'Create Account'
     h = page.html
-    h.must_match /Start New Game/
-    h.wont_match /Join Game/
-    h.must_match /Your account has been created/
+    h.must_include 'Start New Game'
+    h.wont_include 'Join Game'
+    h.must_include 'Your account has been created'
 
     # Registering User #2
     click_button 'Logout' 
@@ -112,32 +110,32 @@ describe 'Quinto Site' do
     fill_in('Confirm Password', :with=>'barfoo')
     click_button 'Create Account'
     h = page.html
-    h.must_match /Start New Game/
-    h.wont_match /Join Game/
-    h.must_match /Your account has been created/
+    h.must_include 'Start New Game'
+    h.wont_include 'Join Game'
+    h.must_include 'Your account has been created'
 
     # Test starting game with same email fails
     fill_in('emails', :with=>'bar@foo.com:[3,4,4,8,10,2,2,3,4,10,7,9,5,8,6,8,8,7,2,4,6,1,7,2,1,7,9,9,7,6,4,3,5,5,10,8,4,8,8,9,6,1,5,1,9,3,10,7,8,8,4,7,6,7,4,8,1,4,7,5,10,7,3,9,10,7,3,6,2,7,10,9,4,6,5,6,3,9,8,9,8,9,7,6,2,9,1,7,9,6]')
     click_button 'Start New Game'
-    page.html.must_match /cannot have same player in two separate positions/
+    page.html.must_include 'cannot have same player in two separate positions'
 
     # Test starting game right after registering
     visit('http://127.0.0.1:3001/')
     login_bar
     fill_in('emails', :with=>'foo@bar.com:[3,4,4,8,10,2,2,3,4,10,7,9,5,8,6,8,8,7,2,4,6,1,7,2,1,7,9,9,7,6,4,3,5,5,10,8,4,8,8,9,6,1,5,1,9,3,10,7,8,8,4,7,6,7,4,8,1,4,7,5,10,7,3,9,10,7,3,6,2,7,10,9,4,6,5,6,3,9,8,9,8,9,7,6,2,9,1,7,9,6]')
     click_button 'Start New Game'
-    page.html.must_match /Pass/
+    page.html.must_include 'Pass'
 
     # Test passing
     click_button 'Pass'
-    page.html.wont_match /Pass/
+    page.html.wont_include 'Pass'
 
     # Test leaving and reentering game
     click_link 'Quinto'
     page.html =~ /(\d+) - foo@bar.com/
     game_id = $1.to_i
     click_button 'Join Game'
-    page.html.wont_match /Pass/
+    page.html.wont_include 'Pass'
 
     # Test dragging and dropping tiles
     join_game(:foo)
@@ -198,15 +196,15 @@ describe 'Quinto Site' do
     page.find('#i6').text.must_equal '4'
 
     # Test error message when current move invalid
-    page.html.must_match /consecutive tiles do not sum to multiple of 5/i
+    page.html.must_match(/consecutive tiles do not sum to multiple of 5/i)
 
     # Test error message removed when current move valid
     click("#rack3")
     click("#i5")
     page.find('#i5').text.must_equal '8'
-    page.html.wont_match /consecutive tiles do not sum to multiple of 5/i
-    page.html.must_match /Move Score: 25/
-    page.html.must_match /i5-8:.+25/
+    page.html.wont_match(/consecutive tiles do not sum to multiple of 5/i)
+    page.html.must_include 'Move Score: 25'
+    page.html.must_match(/i5-8:.+25/)
     
     # Test clicking on existing board tile and then rack tile removes
     # existing rack tile and uses new rack tile
@@ -276,11 +274,11 @@ describe 'Quinto Site' do
     login_foo
     fill_in('emails', :with=>'bar@foo.com:[3,4,4,8,10,2,2,3,4,10,7,9,5,8,6,8,8,7,2,4,6,1,7,2,1,7,9,9,7,6,4,3,5,5,10,8,4,8,8,9,6,1,5,1,9,3,10,7,8,8,4,7,6,7,4,8,1,4,7,5,10,7,3,9,10,7,3,6,2,7,10,9,4,6,5,6,3,9,8,9,8,9,7,6,2,9,1,7,9,6]')
     click_button 'Start New Game'
-    page.html.must_match /Pass/
+    page.html.must_include 'Pass'
 
     # Logging in and joining game
     join_game(:bar)
-    page.html.wont_match /Pass/
+    page.html.wont_include 'Pass'
 
     # Make moves
     join_game(:foo)
@@ -551,11 +549,11 @@ describe 'Quinto Site' do
     click("##{page.evaluate_script("rack_tile_id(7)")}")
     click_button('Commit Move')
 
-    page.html.must_match /Winners: foo@bar.com/
+    page.html.must_include 'Winners: foo@bar.com'
 
     click_link 'Quinto'
-    page.html.must_match /#{game_id} - foo@bar.com/
-    page.html.must_match /#{game_id+1} - foo@bar.com/
-    page.html.wont_match /#{game_id+2} - foo@bar.com/
+    page.html.must_match(/#{game_id} - foo@bar.com/)
+    page.html.must_match(/#{game_id+1} - foo@bar.com/)
+    page.html.wont_match(/#{game_id+2} - foo@bar.com/)
   end
 end

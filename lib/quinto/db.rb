@@ -3,6 +3,7 @@ begin
 rescue LoadError
 end
 
+require_relative 'game'
 require_relative 'structs'
 require 'sequel'
 require 'json'

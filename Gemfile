@@ -17,5 +17,4 @@ group :test, :development do
   gem 'minitest-hooks'
   gem "minitest-global_expectations"
   gem 'capybara'
-  gem 'warning'
 end

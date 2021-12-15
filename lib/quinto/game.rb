@@ -43,9 +43,11 @@ module Quinto
       raise Error, "Game#player_position called with player #{player.id} not in game #{players}"
     end
 
+    remove_method(:state)
     def state
       self[:state] ||= GameState.empty(self, DEFAULT_TILE_BAG.shuffle, players.length)
     end
+    alias state state
 
     def move(move_str)
       self.state = state.move(move_str)
