@@ -35,6 +35,7 @@ else
 end
 Capybara.default_selector = :css
 Capybara.server_port = ENV['PORT'].to_i
+Capybara.exact = true
 
 describe 'Quinto Site' do
   include Capybara::DSL
