@@ -107,7 +107,6 @@ module Quinto
       rodauth.load_memory
 
       r.on "auth" do
-        check_csrf!
         r.rodauth
       end
 

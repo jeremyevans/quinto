@@ -2,7 +2,7 @@ source "https://rubygems.org"
 
 gem 'sequel', '>= 5'
 gem 'roda', '>= 3.18'
-gem 'rodauth', '>= 1.18'
+gem 'rodauth', '>= 2'
 gem 'roda-message_bus'
 gem 'message_bus', '>=3.3.6'
 gem 'bcrypt'
