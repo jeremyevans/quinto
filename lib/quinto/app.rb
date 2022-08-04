@@ -18,7 +18,7 @@ module Quinto
 
     plugin :direct_call
     plugin :public, :gzip=>true
-    plugin :render, :escape=>true
+    plugin :render, :escape=>true, :template_opts=>{:chain_appends=>true}
     plugin :symbol_views
     plugin :json
     plugin :param_matchers

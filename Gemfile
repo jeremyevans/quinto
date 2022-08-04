@@ -10,7 +10,7 @@ gem 'pg'
 gem 'sequel_pg', '>= 1.7'
 gem 'tilt', '>= 2.0.6'
 gem 'unicorn'
-gem 'erubi'
+gem 'erubi', '>= 1.11.0'
 
 group :test, :development do
   gem 'minitest', '>= 5.7.0'
