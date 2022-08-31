@@ -24,6 +24,7 @@ module Quinto
     plugin :param_matchers
     plugin :message_bus, :message_bus=>MESSAGE_BUS
     plugin :request_aref, :raise
+    plugin :disallow_file_uploads
     plugin :typecast_params
 
     plugin :assets,
