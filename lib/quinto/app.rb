@@ -3,9 +3,12 @@ require_relative 'game'
 require_relative 'db'
 
 require 'roda'
-require 'tilt/erubi'
 require 'message_bus'
 require 'strscan' # Needed for Rack::Multipart::Parser
+
+require 'tilt'
+require 'tilt/erubi'
+require 'tilt/string'
 
 module Quinto
   class App < Roda
@@ -19,7 +22,7 @@ module Quinto
 
     plugin :direct_call
     plugin :public, :gzip=>true
-    plugin :render, :escape=>true, :template_opts=>{:chain_appends=>true}
+    plugin :render, :escape=>true, :template_opts=>{:chain_appends=>true, :freeze=>true, :skip_compiled_encoding_detection=>true}
     plugin :symbol_views
     plugin :json
     plugin :param_matchers
