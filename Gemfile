@@ -7,7 +7,7 @@ gem 'roda-message_bus'
 gem 'message_bus', '>=3.3.6'
 gem 'bcrypt'
 gem 'pg'
-gem 'sequel_pg', '>= 1.7'
+gem 'sequel_pg', '>= 1.7', require: nil
 gem 'tilt', '>= 2.2'
 gem 'unicorn'
 gem 'erubi', '>= 1.11.0'
