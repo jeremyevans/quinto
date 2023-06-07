@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Quinto
   Error = Class.new(StandardError)
 
