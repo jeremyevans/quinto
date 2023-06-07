@@ -8,6 +8,13 @@ require 'quinto/game'
 
 include Quinto
 
+begin
+  require 'refrigerator'
+rescue LoadError
+else
+  Refrigerator.freeze_core
+end
+
 describe TilePlace do
   it "#tile_position should use correct DAD format" do
     TilePlace.new(1,0,0).tile_position.must_equal '1a0'
