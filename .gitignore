@@ -1,5 +1,4 @@
-/spec/unicorn.pid
-/spec/unicorn.log
+/spec/puma.log
 /.env.rb
 /compiled_assets.json
 /public/app.*.css

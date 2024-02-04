@@ -28,12 +28,12 @@ task 'web-spec' do
   ENV['QUINTO_SESSION_SECRET'] ||= SecureRandom.base64(48)
 
   sh "psql -U quinto -f sql/clean.sql \"quinto_test\""
-  Process.spawn("#{ENV['UNICORN']||'unicorn'} -E test -p #{ENV['PORT']} -D -c spec/unicorn.conf")
+  pid = Process.spawn('puma', '-e', 'test', '-p', ENV['PORT'], [:out, :err]=>'spec/puma.log')
   begin
     sleep 1
     sh "#{FileUtils::RUBY} #{test_flags} spec/integration_spec.rb"
   ensure 
-    Process.kill(:SIGTERM, File.read('spec/unicorn.pid').to_i)
+    Process.kill(:SIGTERM, pid)
   end
 end
 

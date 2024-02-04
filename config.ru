@@ -9,6 +9,7 @@ unless ENV['RACK_ENV'] == 'development'
     require 'refrigerator'
   rescue LoadError
   else
+    require 'nio' if defined?(Puma)
     Refrigerator.freeze_core
   end
 end
