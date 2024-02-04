@@ -1,51 +1,22 @@
 # frozen_string_literal: true
 require 'capybara'
 require 'capybara/dsl'
+require "capybara/cuprite"
+
+Capybara.register_driver(:cuprite) do |app|
+  Capybara::Cuprite::Driver.new(app, window_size: [1200, 800], xvfb: true)
+end
+Capybara.current_driver = :cuprite
+Capybara.default_selector = :css
+Capybara.server_port = ENV['PORT'].to_i
+Capybara.exact = true
 
 ENV['MT_NO_PLUGINS'] = '1' # Work around stupid autoloading of plugins
 require 'minitest/hooks/default'
 require 'minitest/global_expectations/autorun'
 
-case ENV['CAPYBARA_DRIVER']
-when 'chrome'
-  puts "testing using chrome"
-  require 'selenium-webdriver'
-  Capybara.register_driver :chrome do |app|
-    Capybara::Selenium::Driver.new app, browser: :chrome, options: Selenium::WebDriver::Chrome::Options.new(args: %w[headless disable-gpu])
-  end
-
-  Capybara.current_driver = :chrome
-when 'firefox'
-  puts "testing using firefox"
-  require 'selenium-webdriver'
-  Capybara.register_driver :firefox do |app|
-    browser_options = Selenium::WebDriver::Firefox::Options.new
-    browser_options.args << '--headless'
-    Capybara::Selenium::Driver.new(app, browser: :firefox, marionette: true, options: browser_options)
-  end
-  Capybara.current_driver = :firefox
-else
-  puts "testing using capybara-webkit"
-  require 'capybara-webkit'
-  require 'headless'
-  use_headless = true
-  Capybara.current_driver = :webkit
-  Capybara::Webkit.configure do |config|
-    config.block_unknown_urls
-  end
-end
-Capybara.default_selector = :css
-Capybara.server_port = ENV['PORT'].to_i
-Capybara.exact = true
-
 describe 'Quinto Site' do
   include Capybara::DSL
-
-  if use_headless
-    around do |&block|
-      Headless.ly{super(&block)}
-    end
-  end
 
   after do
 #p page.driver.browser.error_messages

@@ -16,5 +16,5 @@ group :test, :development do
   gem 'minitest', '>= 5.7.0'
   gem 'minitest-hooks'
   gem "minitest-global_expectations"
-  gem 'capybara'
+  gem 'cuprite'
 end

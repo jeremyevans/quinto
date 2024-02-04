@@ -31,7 +31,7 @@ task 'web-spec' do
   pid = Process.spawn('puma', '-e', 'test', '-p', ENV['PORT'], [:out, :err]=>'spec/puma.log')
   begin
     sleep 1
-    sh "#{FileUtils::RUBY} #{test_flags} spec/integration_spec.rb"
+    sh "dbus-run-session -- #{FileUtils::RUBY} #{test_flags} spec/integration_spec.rb"
   ensure 
     Process.kill(:SIGTERM, pid)
   end
