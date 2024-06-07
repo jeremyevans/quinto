@@ -11,6 +11,7 @@ gem 'sequel_pg', '>= 1.7', require: nil
 gem 'tilt', '>= 2.2'
 gem 'puma'
 gem 'erubi', '>= 1.11.0'
+gem 'logger'
 
 group :test, :development do
   gem 'minitest', '>= 5.7.0'
