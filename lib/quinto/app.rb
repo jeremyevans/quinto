@@ -45,7 +45,7 @@ module Quinto
       :gzip=>true
 
     logger = case ENV['RACK_ENV']
-    when 'development'
+    when 'development', 'test'
       Class.new{def write(_) end}.new
     else
       $stderr
@@ -62,7 +62,9 @@ module Quinto
         response.status = 400
         view(:content=>"<h1>Invalid parameter submitted: #{h e.param_name}</h1>")
       else
-        $stderr.puts "#{e.class}: #{e.message}", e.backtrace
+        unless ENV['QUINTO_TEST'] == '1'
+          $stderr.puts "#{e.class}: #{e.message}", e.backtrace
+        end
         e.message
       end
     end

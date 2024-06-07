@@ -2,21 +2,57 @@
 require 'capybara'
 require 'capybara/dsl'
 require "capybara/cuprite"
+require 'securerandom'
+require 'puma/cli'
+require 'nio'
+
+ENV['MT_NO_PLUGINS'] = '1' # Work around stupid autoloading of plugins
+require 'minitest/hooks/default'
+require 'minitest/global_expectations/autorun'
+
+ENV['RACK_ENV'] = 'test'
+ENV['QUINTO_TEST'] = '1'
+ENV['QUINTO_DATABASE_URL'] ||= "postgres:///quinto_test?user=quinto"
+ENV['QUINTO_SESSION_SECRET'] ||= SecureRandom.base64(48)
+
+require_relative '../lib/quinto/app'
+
+port = 3001
+db_name = Quinto::DB.get{current_database.function}
+raise "Doesn't look like a test database (#{db_name}), not running tests" unless db_name =~ /test\z/
 
 Capybara.register_driver(:cuprite) do |app|
   Capybara::Cuprite::Driver.new(app, window_size: [1200, 800], xvfb: true)
 end
 Capybara.current_driver = :cuprite
 Capybara.default_selector = :css
-Capybara.server_port = ENV['PORT'].to_i
+Capybara.server_port = port
 Capybara.exact = true
 
-ENV['MT_NO_PLUGINS'] = '1' # Work around stupid autoloading of plugins
-require 'minitest/hooks/default'
-require 'minitest/global_expectations/autorun'
+queue = Queue.new
+server = Puma::CLI.new(['-s', '-b', "tcp://127.0.0.1:#{port}", '-t', '1:1', 'config.ru'])
+server.launcher.events.on_booted{queue.push(nil)}
+Thread.new do
+  server.launcher.run
+end
+queue.pop
 
 describe 'Quinto Site' do
   include Capybara::DSL
+
+  around(:all) do |&block|
+    Quinto::DB.transaction(:rollback=>:always) do
+      super(&block)
+    end
+  end
+
+  around do |&block|
+    Quinto::DB.transaction(:rollback=>:always, :savepoint=>true, :auto_savepoint=>true) do |c|
+      Quinto::DB.temporarily_release_connection(c) do
+        super(&block)
+      end
+    end
+  end
 
   after do
 #p page.driver.browser.error_messages
@@ -59,7 +95,7 @@ describe 'Quinto Site' do
   end
 
   it "should work as expected" do
-    visit("http://127.0.0.1:#{ENV['PORT']}/")
+    visit("http://127.0.0.1:#{port}/")
     page.html.must_include 'How to Play Quinto'
 
     # Registering User #1

@@ -12,11 +12,17 @@ require 'bcrypt'
 require 'securerandom'
 
 module Quinto
-  DB = Sequel.connect(ENV.delete('QUINTO_DATABASE_URL') || ENV.delete('DATABASE_URL'))
+  opts = {}
+  opts[:max_connections] = 1 if ENV['QUINTO_TEST'] == '1'
+  DB = Sequel.connect(ENV.delete('QUINTO_DATABASE_URL') || ENV.delete('DATABASE_URL'), opts)
   DB.extension :date_arithmetic, :pg_array, :pg_row
   DB.extension :pg_auto_parameterize
   Sequel.extension :pg_array_ops
   DB.register_row_type(:game_states)
+
+  if ENV['QUINTO_TEST'] == '1'
+    DB.extension :temporarily_release_connection
+  end
 
   require 'logger'
   #DB.loggers << Logger.new($stdout)
