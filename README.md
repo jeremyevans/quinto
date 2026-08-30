@@ -1,8 +1,7 @@
 # Quinto
 
 Quinto is based on the 1960s 3M board game of the same name, simplest to
-describe as a numeric version of Scrabble.  This is currently the only
-known electronic implementation of Quinto.
+describe as a numeric version of Scrabble.
 
 ## Demo
 
@@ -14,16 +13,16 @@ The server is written in Ruby, so the first step is installing Ruby.
 
 After installing Ruby, install the dependencies:
 
-    gem install -g Gemfile
+  gem install -g Gemfile
 
 The server requires a PostgreSQL backend. It's recommended you set up an
 application specific server and database:
 
-    createuser quinto
-    createdb -O quinto quinto
-    for sql in sql/*-*.sql; do
-      psql -f $sql quinto
-    done
+  createuser quinto
+  createdb -O quinto quinto
+  for sql in sql/*-*.sql; do
+    psql -f $sql quinto
+  done
 
 You need to set the following environment variables:
 
@@ -33,25 +32,26 @@ QUINTO\_SESSION\_SECRET :: >=64 byte randomly generated secret
 One way to set this is to create a .env.rb file in the root of the repository
 containing:
 
-    ENV['QUINTO_DATABASE_URL'] ||= 'postgres:///?user=quinto&password=...'
-    ENV['QUINTO_SESSION_SECRET'] ||= '...'
+  ENV['QUINTO_DATABASE_URL'] ||= 'postgres:///?user=quinto&password=...'
+  ENV['QUINTO_SESSION_SECRET'] ||= '...'
+  ENV['QUINTO_HMAC_SECRET'] ||= '...'
 
-You can then run the server (via unicorn or another rack-compatible webserver):
+You can then run the server (via puma or another rack-compatible webserver):
 
-    unicorn
+  puma
 
 ## Tests
 
 You can run all test suites using the default rake task:
 
-    rake
+  rake
 
 For the web tests, you need to setup a test database manually first:
 
-    createdb -O quinto quinto_test
-    for sql in sql/*-*.sql; do
-      psql -f $sql quinto_test
-    done
+  createdb -O quinto quinto_test
+  for sql in sql/*-*.sql; do
+    psql -f $sql quinto_test
+  done
 
 ## Source
 
