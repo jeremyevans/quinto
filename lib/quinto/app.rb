@@ -81,6 +81,10 @@ module Quinto
         session['email'] = account[:email]
       end
       after_change_login{session['email'] = DB[:players].where(:id=>session_value).get(:email)}
+      already_logged_in{redirect '/'}
+      if hs = ENV["QUINTO_HMAC_SECRET"]
+        hmac_secret hs
+      end
       logout_redirect '/auth/login'
       login_input_type 'text'
 
